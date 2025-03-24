@@ -118,80 +118,13 @@ intervention <- condition
 control <- 1 - intervention
 mean_control <- 0
 mean_interv <- effect_sizes
-y1 <- mean_control * control + mean_interv[1] * intervention + u0[, 1] + e[, 1]
-y2 <- mean_control * control + mean_interv[2] * intervention + u0[, 2] + e[, 2]
+y1. <- mean_control * control + mean_interv[1] * intervention + u0[, 1] + e[, 1]
+y2. <- mean_control * control + mean_interv[2] * intervention + u0[, 2] + e[, 2]
 
 # my_data <- cbind(id_subj, id_cluster, intervention, control, y1,y1.b, y2, y2.b, condition)
-my_data <- cbind(id_subj, id_cluster, intervention, control, y1, y2, condition)
+my_data. <- cbind(id_subj, id_cluster, intervention, control, y1., y2., condition)
 
 # Multivariate multilevel model-------------------------------------------------
-#Long format with means
-# my_data_long <- melt(as.data.frame(my_data), id.vars = c("id_subj", "cluster", "intervention", "control"), 
-#                      measure.vars = c("y1", "y2"), variable_name = "outcome")
-# 
-# my_data_long$control1 <- ifelse(my_data_long$control == 1 & my_data_long$outcome == "y1", 1, 0)
-# my_data_long$control2 <- ifelse(my_data_long$control == 1 & my_data_long$outcome == "y2", 1, 0)
-# my_data_long$interv1 <- ifelse(my_data_long$intervention == 1 & my_data_long$outcome == "y1", 1, 0)
-# my_data_long$interv2 <- ifelse(my_data_long$intervention == 1 & my_data_long$outcome == "y2", 1, 0)
-# 
-# my_data_long <- my_data_long[order(my_data_long$id_subj),]
-# my_data_long$id_subj <- as.factor(my_data_long$id_subj)
-# my_data_long$id_cluster <- as.factor(my_data_long$id_cluster)
-# 
-# #Model
-# # three_lev <- lmer(value ~ intervention*outcome + control*outcome - 1 + (as.factor(outcome)|id_cluster/id_subj), data = my_data_long)
-# # summary(three_lev)
-# 
-# three_lev <- lmer(value ~ 0 + outcome + control1*outcome + control2*outcome + interv1*outcome + interv2*outcome + (0 + as.factor(outcome)|id_cluster/id_subj), data = my_data_long)
-# summary(three_lev)
-# 
-# three_lev.b <- lmer(list(y1, y2) ~ 0 + intervention + control - 1 + (1 | id_cluster), data = as.data.frame( my_data))
-# 
-# 
-# #Long format with beta
-# my_data_long2 <- melt(as.data.frame(my_data), id.vars = c("id_subj", "id_cluster", "condition"), 
-#                      measure.vars = c("y1.b", "y2.b"), variable_name = "outcome")
-# #Model
-# three_lev2 <- lmer(value ~  condition*outcome + (1|id_cluster/id_subj), data = my_data_long2)
-# summary(three_lev2)
-# 
-# 
-# # three_lev_b <- lmer(value ~ intervention*outcome + control*outcome - 1 + (1|id_cluster)+ (1|id_cluster:id_subj), data = my_data_long)
-# # summary(three_lev_b)
-# # three_lev2b <- lmer(value ~  condition*outcome + (1|id_cluster)+ (1|id_cluster:id_subj), data = my_data_long2)
-# # summary(three_lev2b)
-# 
-# 
-# # Exploring clusters ---------------------------------------------
-# variance_components <- VarCorr(three_lev)
-# print(variance_components)
-# cluster_variance <- attr(variance_components$id_cluster, "stddev")^2
-# print(cluster_variance)
-# #Extract the random effects
-# random_effects <- ranef(three_lev, condVar = TRUE)
-# random_intercepts <- random_effects$id_cluster
-# #Create a data frame for plotting
-# random_intercepts_df <- data.frame(
-#     cluster = factor(rownames(random_intercepts)),
-#     intercept = random_intercepts[, 1],
-#     se = sqrt(attr(random_effects$id_cluster, "postVar")[1, , ])
-# )
-# # Plot
-# library(ggplot2)
-# ggplot(random_intercepts_df, aes(x = cluster, y = intercept)) +
-#     geom_point() +
-#     geom_errorbar(aes(ymin = intercept - 1.96 * se, ymax = intercept + 1.96 * se), width = 0.2) +
-#     labs(title = "Random Intercepts by Cluster",
-#          x = "Cluster",
-#          y = "Random Intercept") +
-#     theme_minimal() +
-#     theme(axis.text.x = element_text(angle = 90, hjust = 1))
-# 
-# library(dplyr)
-# my_data_clustersy1 <- as.data.frame(my_data) %>% group_by(id_cluster) %>% summarise(mean_y = mean(y1), sd_y = sd(y1), count = n())
-# my_data_clustersy2 <- as.data.frame(my_data) %>% group_by(id_cluster) %>% summarise(mean_y = mean(y2), sd_y = sd(y2), count = n())
-
-# EM Version ------------------------------------------------------------------
 library(nlme)
 library(mvtnorm)
 library(numDeriv)
@@ -199,8 +132,8 @@ library(numDeriv)
 source("EM_algorithm.R")
 source("loglikelihood.R")
 
-colnames(my_data)[2] <- "cluster"
-estimations <- EM.estim2(as.data.frame(my_data), as.formula('y1 ~ condition'), as.formula('y2 ~ condition'), 
+colnames(my_data.)[2] <- "cluster"
+estimations. <- EM.estim2(as.data.frame(my_data.), as.formula('y1. ~ condition'), as.formula('y2. ~ condition'), 
           maxiter = 500, verbose = TRUE)
 
 
@@ -283,8 +216,41 @@ bf_y2 <- BF(estimates_y2, Sigma = estimations$var_cov[3:4, 3:4], n = effective_n
             hypothesis = "slope<0; slope>0")
 # Because I am working with hypotheses with only inequality constraints, I have compare
 # my results with  the 6th column (BF>). This column show the BF of the inequality 
-# constained hypothesis against the unconstrained hypothesis. 
+# constrained hypothesis against the unconstrained hypothesis. 
 
 
 bf_y2hess <- BF(estimates_y2, Sigma = estimations$hessian_method[3:4, 3:4], n = effective_n, 
             hypothesis = "slope<0; slope>0")
+
+# Homogeneity Test -------------------------------------------
+# $H_0$: Effect sizes (slopes) or treatment effects are equal (across endpoints). 
+# $H_1$: At least one effect size is different compared with the other effect sizes.
+## Using bain
+estimations_y1y2 <- c(estimates_y1, estimates_y2)
+names(estimations_y1y2) <- c("Intercept1", "Slope1", "Intercept2", "Slope2") 
+bain(estimations_y1y2, "Slope1=Slope2", n = effective_n,
+     Sigma = estimations$hessian_method)
+
+## Uisng BFpack
+bf_y2hess <- BF(estimations_y1y2, Sigma = estimations$hessian_method, n = effective_n, 
+                hypothesis = "Slope1=Slope2")
+summary(bf_y2hess)
+
+
+# Intersection--union test ------------------------------------
+# $H_0$: At least one or both effect sizes are zero.
+# $H_1$: Effect sizes are larger than zero.
+# This means that now we have to test that the effect sizes are larger than zero and the Bayes factor indicating this should be at least the Bayes factor threshold.
+
+intersection_union <- function(estimations_y1y2, covariances_matrix, effective_n, Bayes_pack) {
+    result <- FALSE
+    if(Bayes_pack == "bain"){
+        Bf <- bain(estimations_y1y2, "Slope1>0; Slope2>0", n = effective_n,
+                   Sigma = covariances_matrix)
+    } else if (Bayes_pack == "BFpack"){
+        Bf <- BF(estimations_y1y2, Sigma = estimations$hessian_method, n = effective_n, 
+                 hypothesis = "Slope1>0; Slope2>0")
+    }
+    browser()
+    #ifelse(Bf$)
+}
