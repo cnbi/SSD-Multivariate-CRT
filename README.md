@@ -6,11 +6,11 @@ Research compendium of the project *Bayesian Sample Size Determination in Multiv
   - **Manuscript**
   - references.bib
 - **results**
-  - **Slides** - 
+  - **Slides** - Contains the slides used in presentation of this research
   - **Posters** - Contains the posters where this research was presented
   - **Plots** - Constains the plots used in the manuscript, slides, and posters
-- scripts
-- **data** - contains the data used in the application of the methodology in the manuscript
+- **scripts**
+- **data** - Contains the data used in the application of the methodology in the manuscript
 - CITATION
 - LICENSE
 - README
