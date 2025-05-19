@@ -135,3 +135,10 @@ calc_ICCs <- function(estimations, n_outcomes) {
                 emp_rho1 = emp_rho1,
                 emp_rho2 = emp_rho2))
 }
+
+# Create the hypothesis to test------------------------------------
+hypothesis_maker <- function(names_h, difference, constrain) {
+    #estimates <- sort(estimates, decreasing = TRUE)
+    hypothesis <- paste0(names_h[1],"-", names_h[2], constrain, as.character(difference))
+    return(hypothesis)
+}

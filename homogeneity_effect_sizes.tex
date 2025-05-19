@@ -1,0 +1,546 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Testing homogeneity of effect sizes},
+  pdfauthor={Camila N. Barragán Ibáñez},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Testing homogeneity of effect sizes}
+\author{Camila N. Barragán Ibáñez}
+\date{2025-04-17}
+
+\begin{document}
+\maketitle
+
+The idea is to test homogeneity of effect sizes. Thus, what I am testing
+is an interval built using one of the slopes as a reference point.
+
+\[H_1: slope1-\Delta <slope2 < slope1+\Delta\] where \(\Delta\) can be
+specified by researchers. As default I want to use 0.2 as this is a
+common threshold for small effect sizes.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(mvtnorm)}
+\FunctionTok{library}\NormalTok{(BFpack)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'BFpack' was built under R version 4.4.3
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: bain
+\end{verbatim}
+
+\begin{verbatim}
+## Registered S3 methods overwritten by 'lme4':
+##   method               from
+##   simulate.formula     ergm
+##   simulate.formula_lhs ergm
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in check_dep_version(): ABI version mismatch: 
+## lme4 was built with Matrix ABI version 1
+## Current Matrix ABI version is 2
+## Please re-install lme4 from source or restore original 'Matrix' package
+\end{verbatim}
+
+\begin{verbatim}
+## Registered S3 methods overwritten by 'BFpack':
+##   method               from
+##   get_estimates.lm     bain
+##   get_estimates.t_test bain
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## This is BFpack 1.4.2.
+## Updates on default settings:
+## - For standard (exploratory) tests, the default prior probability for a zero, negative,
+## and positive effect are 0.5, 0.25, and 0.25, respectively. The previous default was 1/3 for each
+## hypothesis. Changing these prior probabilities can be done using the argument 'prior.hyp.explo'.
+## - For linear regression, ANOVA, t-tests, the fractional Bayes factor ('FBF') is the new default.
+## To change this to the adjusted fractional Bayes factor (the previous default), users can set
+## the argument: BF.type='AFBF'.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(bain)}
+
+\CommentTok{\# Initial parameters}
+\NormalTok{sigma }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\FloatTok{0.3}\NormalTok{, }\FloatTok{0.2}\NormalTok{, }\FloatTok{0.2}\NormalTok{, }\FloatTok{0.3}\NormalTok{), }\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{)}
+\NormalTok{effect\_n }\OtherTok{\textless{}{-}} \DecValTok{40}
+
+\CommentTok{\# Low BF}
+\NormalTok{slope1 }\OtherTok{\textless{}{-}} \FloatTok{0.2} \CommentTok{\# Effect size 1}
+\NormalTok{slope2 }\OtherTok{\textless{}{-}} \FloatTok{0.75} \CommentTok{\# Effect size 2}
+\NormalTok{estimates }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FloatTok{0.2}\NormalTok{, }\FloatTok{0.75}\NormalTok{)}
+\FunctionTok{names}\NormalTok{(estimates) }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"slope1"}\NormalTok{, }\StringTok{"slope2"}\NormalTok{)}
+
+\CommentTok{\# Complexity}
+\NormalTok{b }\OtherTok{\textless{}{-}} \DecValTok{1}
+\NormalTok{b\_calc }\OtherTok{\textless{}{-}} \DecValTok{2}\SpecialCharTok{/}\NormalTok{effect\_n }\CommentTok{\# 2 because we have two independent constrains (\textless{} \& \textless{})}
+\NormalTok{sigma\_b }\OtherTok{\textless{}{-}}\NormalTok{ sigma}\SpecialCharTok{/}\NormalTok{b\_calc}
+\NormalTok{complexity\_h1 }\OtherTok{\textless{}{-}} \FunctionTok{pmvnorm}\NormalTok{(}\AttributeTok{lower =} \FunctionTok{c}\NormalTok{(slope1 }\SpecialCharTok{{-}} \FloatTok{0.2}\NormalTok{, slope1 }\SpecialCharTok{{-}} \FloatTok{0.2}\NormalTok{), }\AttributeTok{upper =} \FunctionTok{c}\NormalTok{(slope1 }\SpecialCharTok{+} \FloatTok{0.2}\NormalTok{, slope1 }\SpecialCharTok{+} \FloatTok{0.2}\NormalTok{), }
+                             \AttributeTok{mean =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\AttributeTok{sigma =}\NormalTok{ sigma\_b)}
+\NormalTok{complexity\_h1 }\OtherTok{\textless{}{-}}\NormalTok{ complexity\_h1[}\DecValTok{1}\NormalTok{]}
+
+\CommentTok{\# Fit }
+\NormalTok{fit\_h1 }\OtherTok{\textless{}{-}} \FunctionTok{pmvnorm}\NormalTok{(}\AttributeTok{lower =} \FunctionTok{c}\NormalTok{(slope1 }\SpecialCharTok{{-}} \FloatTok{0.2}\NormalTok{, slope1 }\SpecialCharTok{{-}} \FloatTok{0.2}\NormalTok{), }\AttributeTok{upper =} \FunctionTok{c}\NormalTok{(slope1 }\SpecialCharTok{+} \FloatTok{0.2}\NormalTok{, slope1 }\SpecialCharTok{+} \FloatTok{0.2}\NormalTok{), }
+                  \AttributeTok{mean =}\NormalTok{ estimates, }\AttributeTok{sigma =}\NormalTok{ sigma)}
+\NormalTok{fit\_h1 }\OtherTok{\textless{}{-}}\NormalTok{ fit\_h1[}\DecValTok{1}\NormalTok{]}
+
+\CommentTok{\# BF}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Fit:"}\NormalTok{, fit\_h1,}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Fit: 0.04681177
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Complexity:"}\NormalTok{, complexity\_h1,}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Complexity: 0.005648798
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"BF1u:"}\NormalTok{, fit\_h1}\SpecialCharTok{/}\NormalTok{complexity\_h1,}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)                                      }\CommentTok{\#BF1u}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## BF1u: 8.287033
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"BFcu:"}\NormalTok{, (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ fit\_h1)}\SpecialCharTok{/}\NormalTok{(}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ complexity\_h1),}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)                              }\CommentTok{\#BFcu}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## BFcu: 0.9586032
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"BF1c:"}\NormalTok{, (fit\_h1}\SpecialCharTok{/}\NormalTok{complexity\_h1)}\SpecialCharTok{/}\NormalTok{((}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ fit\_h1)}\SpecialCharTok{/}\NormalTok{(}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ complexity\_h1)))     }\CommentTok{\#BF1c}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## BF1c: 8.644904
+\end{verbatim}
+
+Question 2:This result favours the incorrect hypothesis. I suspect that
+the reason is that the hypothesis is partially true because the the
+interval is around one of the treatment effects.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# High BF}
+\NormalTok{slope1 }\OtherTok{\textless{}{-}} \FloatTok{0.3}
+\NormalTok{slope2 }\OtherTok{\textless{}{-}} \FloatTok{0.45}
+\NormalTok{estimates }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FloatTok{0.3}\NormalTok{, }\FloatTok{0.45}\NormalTok{)}
+\FunctionTok{names}\NormalTok{(estimates) }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"slope1"}\NormalTok{, }\StringTok{"slope2"}\NormalTok{)}
+
+\CommentTok{\# Complexity}
+\NormalTok{b }\OtherTok{\textless{}{-}} \DecValTok{1}
+\NormalTok{b\_calc }\OtherTok{\textless{}{-}} \DecValTok{2}\SpecialCharTok{/}\NormalTok{effect\_n }\CommentTok{\# 2 because we have two independent constrains (\textless{} \& \textless{})}
+\NormalTok{sigma\_b }\OtherTok{\textless{}{-}}\NormalTok{ sigma}\SpecialCharTok{/}\NormalTok{b\_calc}
+\NormalTok{complexity\_h1 }\OtherTok{\textless{}{-}} \FunctionTok{pmvnorm}\NormalTok{(}\AttributeTok{lower =} \FunctionTok{c}\NormalTok{(slope1 }\SpecialCharTok{{-}} \FloatTok{0.2}\NormalTok{, slope1 }\SpecialCharTok{{-}} \FloatTok{0.2}\NormalTok{), }\AttributeTok{upper =} \FunctionTok{c}\NormalTok{(slope1 }\SpecialCharTok{+} \FloatTok{0.2}\NormalTok{, slope1 }\SpecialCharTok{+} \FloatTok{0.2}\NormalTok{), }
+                             \AttributeTok{mean =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\AttributeTok{sigma =}\NormalTok{ sigma\_b)}
+\NormalTok{complexity\_h1 }\OtherTok{\textless{}{-}}\NormalTok{ complexity\_h1[}\DecValTok{1}\NormalTok{]}
+
+\CommentTok{\# Fit }
+\NormalTok{fit\_h1 }\OtherTok{\textless{}{-}} \FunctionTok{pmvnorm}\NormalTok{(}\AttributeTok{lower =} \FunctionTok{c}\NormalTok{(slope1 }\SpecialCharTok{{-}} \FloatTok{0.2}\NormalTok{, slope1 }\SpecialCharTok{{-}} \FloatTok{0.2}\NormalTok{), }\AttributeTok{upper =} \FunctionTok{c}\NormalTok{(slope1 }\SpecialCharTok{+} \FloatTok{0.2}\NormalTok{, slope1 }\SpecialCharTok{+} \FloatTok{0.2}\NormalTok{), }
+                  \AttributeTok{mean =}\NormalTok{ estimates, }\AttributeTok{sigma =}\NormalTok{ sigma)}
+\NormalTok{fit\_h1 }\OtherTok{\textless{}{-}}\NormalTok{ fit\_h1[}\DecValTok{1}\NormalTok{]}
+
+\CommentTok{\# BF}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Fit:"}\NormalTok{, fit\_h1,}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Fit: 0.09923224
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Complexity:"}\NormalTok{, complexity\_h1,}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Complexity: 0.005620662
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"BF1u:"}\NormalTok{, fit\_h1}\SpecialCharTok{/}\NormalTok{complexity\_h1,}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)                                     }\CommentTok{\#BF1u}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## BF1u: 17.6549
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"BFcu:"}\NormalTok{, (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ fit\_h1)}\SpecialCharTok{/}\NormalTok{(}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ complexity\_h1),}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)                              }\CommentTok{\#BFcu}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## BFcu: 0.9058593
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"BF1c:"}\NormalTok{, (fit\_h1}\SpecialCharTok{/}\NormalTok{complexity\_h1)}\SpecialCharTok{/}\NormalTok{((}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ fit\_h1)}\SpecialCharTok{/}\NormalTok{(}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ complexity\_h1)))     }\CommentTok{\#BF1c}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## BF1c: 19.48968
+\end{verbatim}
+
+The results favour the correct hypothesis.
+
+\subsection{Testing with bain}\label{testing-with-bain}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Low BF}
+\NormalTok{slope1 }\OtherTok{\textless{}{-}} \FloatTok{0.2} \CommentTok{\# Effect size 1}
+\NormalTok{slope2 }\OtherTok{\textless{}{-}} \FloatTok{0.75} \CommentTok{\# Effect size 2}
+\NormalTok{estimates }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FloatTok{0.2}\NormalTok{, }\FloatTok{0.75}\NormalTok{)}
+\FunctionTok{names}\NormalTok{(estimates) }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"slope1"}\NormalTok{, }\StringTok{"slope2"}\NormalTok{)}
+\NormalTok{bain\_result }\OtherTok{\textless{}{-}} \FunctionTok{bain}\NormalTok{(estimates, }\StringTok{"slope1{-}0.2\textless{}slope2\textless{}slope1+0.2"}\NormalTok{, }\AttributeTok{n =}\NormalTok{ effect\_n, }\AttributeTok{Sigma =}\NormalTok{ sigma)}
+\NormalTok{bain\_result}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Bayesian informative hypothesis testing for an object of class numeric:
+## 
+##    Fit   Com   BF.u  BF.c  PMPa  PMPb  PMPc 
+## H1 0.169 0.081 2.076 2.295 1.000 0.675 0.697
+## Hu                               0.325      
+## Hc 0.831 0.919 0.905                   0.303
+## 
+## Hypotheses:
+##   H1: slope1-0.2<slope2<slope1+0.2
+## 
+## Note: BF.u denotes the Bayes factor of the hypothesis at hand versus the unconstrained hypothesis Hu. BF.c denotes the Bayes factor of the hypothesis at hand versus its complement. PMPa contains the posterior model probabilities of the hypotheses specified. PMPb adds Hu, the unconstrained hypothesis. PMPc adds Hc, the complement of the union of the hypotheses specified.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# High BF}
+\NormalTok{slope1 }\OtherTok{\textless{}{-}} \FloatTok{0.3}
+\NormalTok{slope2 }\OtherTok{\textless{}{-}} \FloatTok{0.45}
+\NormalTok{estimates }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FloatTok{0.3}\NormalTok{, }\FloatTok{0.45}\NormalTok{)}
+\FunctionTok{names}\NormalTok{(estimates) }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"slope1"}\NormalTok{, }\StringTok{"slope2"}\NormalTok{)}
+
+\NormalTok{bain\_result }\OtherTok{\textless{}{-}} \FunctionTok{bain}\NormalTok{(estimates, }\StringTok{"slope1{-}0.2\textless{}slope2\textless{}slope1+0.2"}\NormalTok{, }\AttributeTok{n =}\NormalTok{ effect\_n, }\AttributeTok{Sigma =}\NormalTok{ sigma)}
+\NormalTok{bain\_result}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Bayesian informative hypothesis testing for an object of class numeric:
+## 
+##    Fit   Com   BF.u  BF.c  PMPa  PMPb  PMPc 
+## H1 0.330 0.079 4.182 5.749 1.000 0.807 0.852
+## Hu                               0.193      
+## Hc 0.670 0.921 0.727                   0.148
+## 
+## Hypotheses:
+##   H1: slope1-0.2<slope2<slope1+0.2
+## 
+## Note: BF.u denotes the Bayes factor of the hypothesis at hand versus the unconstrained hypothesis Hu. BF.c denotes the Bayes factor of the hypothesis at hand versus its complement. PMPa contains the posterior model probabilities of the hypotheses specified. PMPb adds Hu, the unconstrained hypothesis. PMPc adds Hc, the complement of the union of the hypotheses specified.
+\end{verbatim}
+
+I noticed that, despite having different values for the slopes
+(treatment effect), the fit, complexity, and Bayes factors are similar.
+Another aspect that I haven't figured out the reason is that the
+complexity and fit are very different than the code I did.+
+
+\subsection{Testing with BFpack}\label{testing-with-bfpack}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Low BF}
+\NormalTok{slope1 }\OtherTok{\textless{}{-}} \FloatTok{0.2} \CommentTok{\# Effect size 1}
+\NormalTok{slope2 }\OtherTok{\textless{}{-}} \FloatTok{0.75} \CommentTok{\# Effect size 2}
+\NormalTok{estimates }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FloatTok{0.2}\NormalTok{, }\FloatTok{0.75}\NormalTok{)}
+\FunctionTok{names}\NormalTok{(estimates) }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"slope1"}\NormalTok{, }\StringTok{"slope2"}\NormalTok{)}
+
+\NormalTok{BF\_result }\OtherTok{\textless{}{-}} \FunctionTok{BF}\NormalTok{(estimates, }\AttributeTok{Sigma =}\NormalTok{ sigma, }\AttributeTok{n =}\NormalTok{ effect\_n, }\AttributeTok{hypothesis =} \StringTok{"slope1{-}0.2\textless{}slope2\textless{}slope1+0.2"}\NormalTok{)}
+\NormalTok{BF\_result}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Call:
+## BF.default(x = estimates, hypothesis = "slope1-0.2<slope2<slope1+0.2", 
+##     Sigma = sigma, n = effect_n)
+## 
+## Bayesian hypothesis test
+## Type: confirmatory
+## Object: numeric
+## Parameter: general parameters
+## Method: adjusted fractional Bayes factors using Gaussian approximations
+## 
+## Posterior probabilities of the hypotheses
+##    Pr(hypothesis|data)
+## H1               0.777
+## H2               0.223
+## 
+## Evidence matrix (BFs):
+##       H1    H2
+## H1 1.000 3.477
+## H2 0.288 1.000
+## 
+## Hypotheses:
+## H1: slope1-0.2<slope2<slope1+0.2
+## H2: complement
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Fit:"}\NormalTok{, BF\_result}\SpecialCharTok{$}\NormalTok{BFtable\_confirmatory[}\DecValTok{1}\NormalTok{, }\DecValTok{4}\NormalTok{],}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Fit: 0.1757128
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Complexity:"}\NormalTok{, BF\_result}\SpecialCharTok{$}\NormalTok{BFtable\_confirmatory[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{],}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Complexity: 0.05777034
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# High BF}
+\NormalTok{slope1 }\OtherTok{\textless{}{-}} \FloatTok{0.3}
+\NormalTok{slope2 }\OtherTok{\textless{}{-}} \FloatTok{0.25}
+\NormalTok{estimates }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FloatTok{0.3}\NormalTok{, }\FloatTok{0.25}\NormalTok{)}
+\FunctionTok{names}\NormalTok{(estimates) }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"slope1"}\NormalTok{, }\StringTok{"slope2"}\NormalTok{)}
+
+\NormalTok{BF\_result }\OtherTok{\textless{}{-}} \FunctionTok{BF}\NormalTok{(estimates, }\AttributeTok{Sigma =}\NormalTok{ sigma, }\AttributeTok{n =}\NormalTok{ effect\_n, }\AttributeTok{hypothesis =} \StringTok{"slope1{-}0.2\textless{}slope2\textless{}slope1+0.2"}\NormalTok{)}
+\NormalTok{BF\_result}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Call:
+## BF.default(x = estimates, hypothesis = "slope1-0.2<slope2<slope1+0.2", 
+##     Sigma = sigma, n = effect_n)
+## 
+## Bayesian hypothesis test
+## Type: confirmatory
+## Object: numeric
+## Parameter: general parameters
+## Method: adjusted fractional Bayes factors using Gaussian approximations
+## 
+## Posterior probabilities of the hypotheses
+##    Pr(hypothesis|data)
+## H1               0.903
+## H2               0.097
+## 
+## Evidence matrix (BFs):
+##       H1    H2
+## H1 1.000 9.277
+## H2 0.108 1.000
+## 
+## Hypotheses:
+## H1: slope1-0.2<slope2<slope1+0.2
+## H2: complement
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Fit:"}\NormalTok{, BF\_result}\SpecialCharTok{$}\NormalTok{BFtable\_confirmatory[}\DecValTok{1}\NormalTok{, }\DecValTok{4}\NormalTok{],}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Fit: 0.3482904
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Complexity:"}\NormalTok{, BF\_result}\SpecialCharTok{$}\NormalTok{BFtable\_confirmatory[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{],}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Complexity: 0.05446918
+\end{verbatim}
+
+\section{Conclusions}\label{conclusions}
+
+The Bayes factor always favoured the hypothesis despite which hypothesis
+is true. I suspect that the reason is that one of the treatment effects
+is indeed inside the interval. Another reason is that one part of the
+hypothesis is true, given that the slope1 is either lower or larger than
+slope2.
+
+\section{Questions}\label{questions}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  I have assumed a normal distribution, because I am not sure what could
+  be a better option. I have seen that there is a Bayes factor (package
+  \texttt{bayesmed}) that is built to test equivalence between
+  treatments. This is the most similar scenario to what I am trying to
+  test. In this method they use a t distribution. However, in this Bayes
+  factor they are actually creating the distribution of a new parameter
+  that represent the difference between the treatment effects, and test
+  \(H_0:difference=0\) and \(H_1: difference\neq0\).
+\item
+  I have tried to using the difference between the slopes instead, but I
+  also feel a little bit lost in this situation.
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    In the case that I choose to use the difference instead, and use
+    bain or BFpack. How can I specify the hypothesis? I imagine that the
+    idea is to test the absolute value of the difference, however bain
+    nor BFpack admits the symbols for absolute values. I have tried
+    sorting the parameters, so the largest is always first, but then I
+    imagine that I have to order the variance-covariance matrix.
+  \item
+    If I test the difference and use my own code, I think that probably
+    I would have to use the t distribution insteadn of normal, and I am
+    not sure whether I can use the same variance-covariance matrix since
+    I would create the distribution of the difference.
+  \end{enumerate}
+\end{enumerate}
+
+\end{document}

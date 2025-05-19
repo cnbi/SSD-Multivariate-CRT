@@ -12,7 +12,8 @@
 
 SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICC, 
                          intersubj_between_outICC, intrasubj_between_outICC,
-                         BF_thresh = 3, eta = 0.8, fixed = "n1", max, batch_size = 1000, Bayes_pack) {
+                         BF_thresh = 3, eta = 0.8, fixed = "n1", difference = 0.2, max,
+                         batch_size = 1000, Bayes_pack) {
     # Libraries
     if (Bayes_pack == "bain") {
         if (!require("bain")) {install.packages("bain")}
@@ -38,7 +39,6 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     source("multiv_data_generation.R")
     source("loglikelihood.R")
     source("EM_algorithm.R")
-    source("multiple_hypot_testing.R")
     source("aafbf.R")
     source("helpers_functions.R")
     source("print_results.R")
@@ -67,8 +67,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         H1 <- "Slope1>0 & Slope2>0" #Change this
         H2 <- "Slope1>0 & Slope2<0" #Change this
     } else if (test == "homogeneity") {
-        H1 <- "Slope1>0 & Slope2>0" #Change this
-        H2 <- "Slope1>0 & Slope2<0" #Change this
+        H1 <- hypothesis_maker(c("Slope1", "Slope2"), difference, "<")
+        H2 <- hypothesis_maker(c("Slope1", "Slope2"), difference, ">")
     }
     
     #Starting values
@@ -112,12 +112,20 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         } else if (test == "omnibus") {
             effective_n <- effective_sample(n1, n2)
         } else if (test == "homogeneity") {
-            effective_n <- effective_sample(n1, n2)
+            effective_n <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes), list(difference))
         }
         effective_n <- Map(min, effective_n)
-        #Approximated adjusted fractional Bayes factors------------------------------
-        output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
+        #Bayes factors------------------------------
+        if (test == "intersection-union") {
+            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
+        } else if (test == "omnibus") {
+            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack), list(difference))
+        } else if ("homogeneity") {
+            
+            effective_n <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes), list(difference))
+            }
         # output_BF_H1 <- BF_multiv(data_H1$estimations, data_H1$Sigma, effective_n, hypothesis = H1, pack = Bayes_pack)
+        
         
         # Results ---------------------------------------------------------------------
         results_H1[, 1] <- unlist(lapply(output_BF_H1, extract_res, 1)) # Bayes factor H1vsHu
@@ -152,7 +160,6 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                     low <- min_sample
                     high <- max
                     ultimate_sample_sizes <- TRUE
-                    
                 } else {
                     # Increase the number of clusters since eta is too small
                     low <- n2                         #lower bound
@@ -268,6 +275,6 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                        "data_H1" = results_H1)
     
     # Final output
-    print_results_multiv(SSD_object, test, hypothesis)
+    print_results_multiv(SSD_object, test, H1)
     invisible(SSD_object)
 }

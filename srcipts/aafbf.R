@@ -65,7 +65,7 @@ calc_aafbf <- function(type, estimates, sigma, b, n_eff, outcome_type) {
 # estimates: Vector numeric with the estimates
 # sigma: Matrix with the variances and covariances
 
-BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack){
+BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, difference){
     name_parameters <- unique(stringr::str_extract_all(hypothesis, "\\b[[:alnum:]_]+\\b")[[1]])
     estimates <- estimates[names(estimates) %in% name_parameters]
     if (pack == "BFpack") {

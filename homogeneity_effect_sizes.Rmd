@@ -1,0 +1,161 @@
+---
+title: "Testing homogeneity of effect sizes"
+author: "Camila N. Barragán Ibáñez"
+date: "2025-04-17"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The idea is to test homogeneity of effect sizes. Thus, what I am testing is an interval built using one of the slopes as a reference point.
+
+$$H_1: slope1-\Delta <slope2 < slope1+\Delta$$ where $\Delta$ can be specified by researchers. As default I want to use 0.2 as this is a common threshold for small effect sizes.
+
+```{r lowBF}
+library(mvtnorm)
+library(BFpack)
+library(bain)
+
+# Initial parameters
+sigma <- matrix(c(0.3, 0.2, 0.2, 0.3), 2, 2)
+effect_n <- 40
+
+# Low BF
+slope1 <- 0.2 # Effect size 1
+slope2 <- 0.75 # Effect size 2
+estimates <- c(0.2, 0.75)
+names(estimates) <- c("slope1", "slope2")
+
+# Complexity
+b <- 1
+b_calc <- 2/effect_n # 2 because we have two independent constrains (< & <)
+sigma_b <- sigma/b_calc
+complexity_h1 <- pmvnorm(lower = c(slope1 - 0.2, slope1 - 0.2), upper = c(slope1 + 0.2, slope1 + 0.2), 
+                             mean = c(0, 0), sigma = sigma_b)
+complexity_h1 <- complexity_h1[1]
+
+# Fit 
+fit_h1 <- pmvnorm(lower = c(slope1 - 0.2, slope1 - 0.2), upper = c(slope1 + 0.2, slope1 + 0.2), 
+                  mean = estimates, sigma = sigma)
+fit_h1 <- fit_h1[1]
+
+# BF
+cat("Fit:", fit_h1,"\n")
+cat("Complexity:", complexity_h1,"\n")
+cat("BF1u:", fit_h1/complexity_h1,"\n")                                      #BF1u
+cat("BFcu:", (1 - fit_h1)/(1 - complexity_h1),"\n")                              #BFcu
+cat("BF1c:", (fit_h1/complexity_h1)/((1 - fit_h1)/(1 - complexity_h1)))     #BF1c
+```
+
+Question 2:This result favours the incorrect hypothesis. I suspect that the reason is that the hypothesis is partially true because the the interval is around one of the treatment effects.
+
+```{r highBF}
+
+# High BF
+slope1 <- 0.3
+slope2 <- 0.45
+estimates <- c(0.3, 0.45)
+names(estimates) <- c("slope1", "slope2")
+
+# Complexity
+b <- 1
+b_calc <- 2/effect_n # 2 because we have two independent constrains (< & <)
+sigma_b <- sigma/b_calc
+complexity_h1 <- pmvnorm(lower = c(slope1 - 0.2, slope1 - 0.2), upper = c(slope1 + 0.2, slope1 + 0.2), 
+                             mean = c(0, 0), sigma = sigma_b)
+complexity_h1 <- complexity_h1[1]
+
+# Fit 
+fit_h1 <- pmvnorm(lower = c(slope1 - 0.2, slope1 - 0.2), upper = c(slope1 + 0.2, slope1 + 0.2), 
+                  mean = estimates, sigma = sigma)
+fit_h1 <- fit_h1[1]
+
+# BF
+cat("Fit:", fit_h1,"\n")
+cat("Complexity:", complexity_h1,"\n")
+cat("BF1u:", fit_h1/complexity_h1,"\n")                                     #BF1u
+cat("BFcu:", (1 - fit_h1)/(1 - complexity_h1),"\n")                              #BFcu
+cat("BF1c:", (fit_h1/complexity_h1)/((1 - fit_h1)/(1 - complexity_h1)))     #BF1c
+```
+
+The results favour the correct hypothesis.
+
+## Testing with bain
+
+```{r pressure}
+# Low BF
+slope1 <- 0.2 # Effect size 1
+slope2 <- 0.75 # Effect size 2
+estimates <- c(0.2, 0.75)
+names(estimates) <- c("slope1", "slope2")
+bain_result <- bain(estimates, "slope1-0.2<slope2<slope1+0.2", n = effect_n, Sigma = sigma)
+bain_result
+```
+
+```{r}
+# High BF
+slope1 <- 0.3
+slope2 <- 0.45
+estimates <- c(0.3, 0.45)
+names(estimates) <- c("slope1", "slope2")
+
+bain_result <- bain(estimates, "slope1-0.2<slope2<slope1+0.2", n = effect_n, Sigma = sigma)
+bain_result
+```
+
+I noticed that, despite having different values for the slopes (treatment effect), the fit, complexity, and Bayes factors are similar. Another aspect that I haven't figured out the reason is that the complexity and fit are very different than the code I did.
+
+## Testing with BFpack
+
+```{r}
+# Low BF
+slope1 <- 0.2 # Effect size 1
+slope2 <- 0.75 # Effect size 2
+estimates <- c(0.2, 0.75)
+names(estimates) <- c("slope1", "slope2")
+
+BF_result <- BF(estimates, Sigma = sigma, n = effect_n, hypothesis = "slope1-0.2<slope2<slope1+0.2")
+BF_result
+cat("Fit:", BF_result$BFtable_confirmatory[1, 4],"\n")
+cat("Complexity:", BF_result$BFtable_confirmatory[1, 2],"\n")
+```
+
+```{r}
+# High BF
+slope1 <- 0.3
+slope2 <- 0.25
+estimates <- c(0.3, 0.25)
+names(estimates) <- c("slope1", "slope2")
+
+BF_result <- BF(estimates, Sigma = sigma, n = effect_n, hypothesis = "slope1-0.2<slope2<slope1+0.2")
+BF_result
+cat("Fit:", BF_result$BFtable_confirmatory[1, 4],"\n")
+cat("Complexity:", BF_result$BFtable_confirmatory[1, 2],"\n")
+
+```
+
+# Conclusions
+
+The Bayes factor always favoured the hypothesis despite which hypothesis is true. I suspect that the reason is that one of the treatment effects is indeed inside the interval. Another reason is that one part of the hypothesis is true, given that the slope1 is either lower or larger than slope2.
+
+# Questions
+
+1.  I have assumed a normal distribution, because I am not sure what could be a better option. I have seen that there is a Bayes factor (package `bayesmed`) that is built to test equivalence between treatments. This is the most similar scenario to what I am trying to test. In this method they use a t distribution. However, in this Bayes factor they are actually creating the distribution of a new parameter that represent the difference between the treatment effects, and test $H_0:difference=0$ and $H_1: difference\neq0$.
+
+2.  I have tried to using the difference between the slopes instead, but I also feel a little bit lost in this situation.
+
+    1.  In the case that I choose to use the difference instead, and use bain or BFpack. How can I specify the hypothesis? I imagine that the idea is to test the absolute value of the difference, however bain nor BFpack admits the symbols for absolute values. I have tried sorting the parameters, so the largest is always first, but then I imagine that I have to order the variance-covariance matrix.
+    2.  If I test the difference and use my own code, I think that probably I would have to use the t distribution instead of normal, and I am not sure whether I can use the same variance-covariance matrix since I would create the distribution of the difference.
+
+# Testing with difference less than 
+
+The hypothesis is that $\beta_1-\beta_2\leq\Delta$ and its complement, where $\beta_p$ correspond to the treatment effect of outcome $p=1, 2..., k$ and $\Delta$ is the difference that the researcher contemplates as the minimum effect treatment to conclude that both outcomes are *similar*. Note that the inequality constraint is only one side, however we expect that the difference could be positive or negative. Thus, the largest treatment effect is first.
+
+In `bain` package
+
+```{r}
+
+
+```
