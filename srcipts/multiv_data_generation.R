@@ -9,7 +9,7 @@
 #' intrasubj_between_outICC: Intrasubject between-endpoint/outcomes intraclass correlation coefficient.
 
 gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, intersubj_between_outICC, 
-                            intrasubj_between_outICC, n_outcomes){
+                            intrasubj_between_outICC, n_outcomes, seed){
     
     # Matrix with intersubject intraclass correlation coefficients
     intersubj_iccs <- matrix(NA, n_outcomes, n_outcomes)
@@ -84,12 +84,14 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, i
             }
         }
     }
+    sigma_e <- calibration_nonpos_def(sigma_e)
+    sigma_u0 <- calibration_nonpos_def(sigma_u0)
     # Random effects
     for (iteration in seq(ndatasets)) {
-        seeds[iteration] <- (iteration + 100) * iteration
+        seeds[iteration] <- (iteration + seed) * iteration
         set.seed(seeds[iteration])
-        e <- MASS::mvrnorm(n1*n2, rep(0, n_outcomes), sigma_e)
-        u0 <- MASS::mvrnorm(n2, rep(0, n_outcomes), sigma_u0)
+        e <- MASS::mvrnorm(n1*n2, rep(0, n_outcomes), sigma_e, tol = 1e-04)
+        u0 <- MASS::mvrnorm(n2, rep(0, n_outcomes), sigma_u0, tol = 1e-04)
         u0 <- do.call(rbind, replicate(n1, u0, simplify = FALSE))
         
         z_bar <- mean(condition)
@@ -123,7 +125,7 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, i
     
     # Calculate ICCs
     ICCs <- Map(calc_ICCs, estimations, list(n_outcomes))
-    
+    print("Data generation done!")
     return(list(estimations = fixed_eff,
                 Sigma = var_cov,
                 ICCs = ICCs,

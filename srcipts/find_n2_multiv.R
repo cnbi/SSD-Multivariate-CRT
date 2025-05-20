@@ -13,7 +13,7 @@
 SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICC, 
                          intersubj_between_outICC, intrasubj_between_outICC,
                          BF_thresh = 3, eta = 0.8, fixed = "n1", difference = 0.2, max,
-                         batch_size = 1000, Bayes_pack) {
+                         batch_size = 1000, seed, Bayes_pack) {
     # Libraries
     if (Bayes_pack == "bain") {
         if (!require("bain")) {install.packages("bain")}
@@ -99,7 +99,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                  out_specific_ICC,
                                                  intersubj_between_outICC,
                                                  intrasubj_between_outICC,
-                                                 n_outcomes))
+                                                 n_outcomes, seed))
         
         # If H2 is true
         # data_H2 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH2, out_specific_ICC, intersubj_between_outICC, intrasubj_between_outICC,
@@ -115,6 +115,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             effective_n <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes), list(difference))
         }
         effective_n <- Map(min, effective_n)
+        
         #Bayes factors------------------------------
         if (test == "intersection-union") {
             output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
@@ -125,14 +126,13 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             effective_n <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes), list(difference))
             }
         # output_BF_H1 <- BF_multiv(data_H1$estimations, data_H1$Sigma, effective_n, hypothesis = H1, pack = Bayes_pack)
-        
-        
+
         # Results ---------------------------------------------------------------------
         results_H1[, 1] <- unlist(lapply(output_BF_H1, extract_res, 1)) # Bayes factor H1vsHu
         results_H1[, 2] <- unlist(lapply(output_BF_H1, extract_res, 2)) # Bayes factor H1vsHc
         results_H1[, 3] <- unlist(lapply(output_BF_H1, extract_res, 3)) #posterior model probabilities of H1
         colnames(results_H1) <- c("BF.1u", "BF.1c", "PMP.1c")
-        
+        print("Bayes factor done!")
         # results_H0[, 1] <- unlist(lapply(output_AAFBF_H0, extract_res, 1)) # Bayes factor H1vsH0
         # results_H0[, 2] <- unlist(lapply(output_AAFBF_H0, extract_res, 4)) #posterior model probabilities of H1
         # results_H0[, 3] <- unlist(lapply(output_AAFBF_H0, extract_res, 2)) # Bayes factor H0vsH1

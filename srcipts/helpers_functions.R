@@ -22,7 +22,8 @@ neg_loglik <- function(theta, n2, Y, X, ID, n1s, outcomes) {
 # Extract results ----------------
 #
 extract_res <- function(x, number) {
-    results <- x[[number]]
+    results <- ifelse(is.null(x[[number]]), NaN, x[[number]])
+    #results <- x[[number]]
     return(results)
 }
 
@@ -141,4 +142,29 @@ hypothesis_maker <- function(names_h, difference, constrain) {
     #estimates <- sort(estimates, decreasing = TRUE)
     hypothesis <- paste0(names_h[1],"-", names_h[2], constrain, as.character(difference))
     return(hypothesis)
+}
+
+
+#Calibration method for non-positive definite covariance matrix in multivariate data analysis---------------
+# Source: Chao Huang, Daniel Farewell, Jianxin Pan, A calibration method for non-positive definite covariance 
+# matrix in multivariate data analysis, Journal of Multivariate Analysis, Volume 157,2017,Pages 45-52,ISSN 0047-259X,
+# https://doi.org/10.1016/j.jmva.2017.03.001.
+calibration_nonpos_def <- function(cov_matrix) {
+    # Perform eigenvalue decomposition
+    eigen_decomp <- eigen(cov_matrix)
+    
+    # Extract eigenvalues and eigenvectors
+    eigenvalues <- eigen_decomp$values
+    eigenvectors <- eigen_decomp$vectors
+    
+    # Check if any eigenvalue is non-positive and adjust the eigenvalues if necessary
+    if (any(eigenvalues <= 0)) {
+        # Adjust non-positive eigenvalues by adding a small constant to make them positive
+        eigenvalues <- pmax(eigenvalues, 1e-6)  # Add a small constant (1e-6) to non-positive eigenvalues
+        # Reconstruct the covariance matrix using the adjusted eigenvalues
+        corrected_matrix <- eigenvectors %*% diag(eigenvalues) %*% t(eigenvectors)
+        return(corrected_matrix)
+    } else {
+        return(cov_matrix)  # Return original matrix if it's already positive definite
+    }
 }

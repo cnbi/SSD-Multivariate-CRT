@@ -4,23 +4,24 @@
 # simulation function for second project
 # name_results: characters. Name which will be use fo saving results
 # name_times: characters. Name which will be use fo saving time results
-run_simulation <- function(Row, name_results, name_times, design_matrix){
+run_simulation <- function(Row, name_results, name_times, design_matrix, results_folder, seed){
     # Start time
     start_time <- Sys.time()
-    
+
     # Actual simulation
-    ssd_results <- SSD_multiv_CRT(test = design_matrix[Row, "test"], 
-                                  effect_sizes = design_matrix[Row, "effect_sizes"], 
+    ssd_results <- SSD_mult_CRT(test = design_matrix[Row, "test"], 
+                                  effect_sizes = c(design_matrix[Row, "eff_size1"], design_matrix[Row, "eff_size2"]), 
                                   n1 = design_matrix[Row, "n1"],
                                   n2 = design_matrix[Row, "n2"], 
-                                  ndatasets = 1000,
+                                  ndatasets = 100,
                                   out_specific_ICC = design_matrix[Row, "out_specific_ICC"], 
                                   intersubj_between_outICC = design_matrix[Row, "intersubj_between_outICC"], 
                                   intrasubj_between_outICC = design_matrix[Row, "intrasubj_between_outICC"],
                                   BF_thresh = design_matrix[Row, "BF_thresh"], eta = 0.8, 
-                                  fixed = design_matrix[Row, "fixed"], max = 1000, 
+                                  fixed = as.character(design_matrix[Row, "fixed"]), max = 1000, 
                                   batch_size = 1000,
-                                  Bayes_pack = design_matrix[Row, "Bayes_pack"])
+                                  Bayes_pack = as.character(design_matrix[Row, "Bayes_pack"]),
+                                seed = seed)
     
     # Save results
     end_time <- Sys.time()
