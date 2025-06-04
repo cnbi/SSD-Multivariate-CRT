@@ -24,6 +24,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     if (!require("dplyr")) {install.packages("dplyr")} #?
     if (!require("numDeriv")) {install.packages("numDeriv")} #Hessian
     if (!require("nlme")) {install.packages("nlme")} #Multilevel model
+    if (!require("lme4")) {install.packages("lme4")} #Multilevel model
     if (!require("stringr")) {install.packages("stringr")} #Multilevel model
     if (!requireNamespace("numDeriv", quietly = TRUE)) {
         install.packages("numDeriv")
@@ -117,6 +118,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         effective_n <- Map(min, effective_n)
         
         #Bayes factors------------------------------
+
         if (test == "intersection-union") {
             output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
         } else if (test == "omnibus") {
@@ -126,7 +128,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             effective_n <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes), list(difference))
             }
         # output_BF_H1 <- BF_multiv(data_H1$estimations, data_H1$Sigma, effective_n, hypothesis = H1, pack = Bayes_pack)
-
+        
         # Results ---------------------------------------------------------------------
         results_H1[, 1] <- unlist(lapply(output_BF_H1, extract_res, 1)) # Bayes factor H1vsHu
         results_H1[, 2] <- unlist(lapply(output_BF_H1, extract_res, 2)) # Bayes factor H1vsHc

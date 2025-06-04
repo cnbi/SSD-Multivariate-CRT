@@ -30,7 +30,7 @@ if (test == "intersection-union") {
 }
 bf_pack <- c("bain")
 # Finding number of clusters
-n1 <- c(3, 15, 30)
+n1 <- c(5, 15, 30)
 n2 <- 30
 fixed <- c("n1")
 design_matrix_n2 <- expand.grid(outcome_icc, intersubj_icc, intrasubj_icc, bf_thresh,
@@ -61,11 +61,12 @@ library(purrr)    # Format tables
 # Creation folder for results
 folder_results <- "findN2_iu"
 if (!dir.exists(folder_results)) {dir.create(folder_results)}
+missing_rows <- c(167:nrow(design_matrix_n2))
 
 # Loop for every row
-for (Row in 7:nrow(design_matrix_n2)) {
+for (Row in missing_rows) {
     seed <- 2106
     run_simulation(Row, name_results = "findN2_iu_", name_times = "time_findN2_iu", 
                           design_matrix = design_matrix_n2, results_folder = folder_results, seed)
 }
-
+#166

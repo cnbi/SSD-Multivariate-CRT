@@ -9,20 +9,30 @@
 # function to perform EM estimation with K=2 outcomes
 EM.estim2 <- function(data, formula1, formula2, maxiter = 500, epsilon = 1e-4, 
                       verbose = FALSE){
+    #options(error = recover)
     # data: source data set
     # formula1: fit mixed model with outcome 1 and the treatment arm. e.g formula1 <-as.formula(  "out1 ~ arm")
     # formula2: fit mixed model with outcome 2 and the treatment arm. e.g formula1 <-as.formula(  "out2 ~ arm")
     
     # fit mixed model to initialize parameters
-    fm1 <- lme(formula1, random = ~ 1|cluster, data = data) #y1~condition
-    fm2 <- lme(formula2, random = ~ 1|cluster, data = data) #y2~condition
+    formula1.s <- as.formula("y1 ~ condition")
+    fm1 <- lme(formula1.s, random = ~ 1|cluster, data = data) #y1~condition
+    #fm1.1 <- lme4::lmer(formula1, data = data) #y1~condition
+    formula2.s <- as.formula("y2 ~ condition")
+    fm2 <- lme(formula2.s, random = ~ 1|cluster, data = data) #y2~condition
+    #fm2.1 <- lme4::lmer(formula2, data = data) #y2~condition
     zeta <- as.numeric(c(fm1$coefficients$fixed, fm2$coefficients$fixed)) #fixed effects coefficients
+    # beta1 <- fixef(fm1.1)
+    # beta2 <- fixef(fm2.1)
+    # zeta <- as.numeric(beta1, beta2) # Vector with fixed effects
     beta1 <- zeta[1:2] 
     beta2 <- zeta[3:4]
     
     n1s <- as.numeric(table(data$cluster)) #Vector with n1 for every cluster
     s2phi1 <- VarCorr(fm1)[1, 1]  # Random intercepts model 1
-    s2phi2 <- VarCorr(fm2)[1, 1]  # Random intercepts model 2
+    #s2phi1 <- as.data.frame(VarCorr(fm1.1))[1, 4]  # Random intercepts model 1
+    s2phi2 <- VarCorr(fm2)[1, 1]  # Random intercepts model 2is
+    #s2phi2 <- as.data.frame(VarCorr(fm2.1))[1, 4]  # Random intercepts model 2is
     SigmaPhi <- diag(c(s2phi1, s2phi2))  #Variance-covariance matrix for random intercepts
     InvS2Phi <- solve(SigmaPhi)
     
@@ -71,6 +81,7 @@ EM.estim2 <- function(data, formula1, formula2, maxiter = 500, epsilon = 1e-4,
         
         # Maximization step - phi
         SigmaPhi <- apply(ESSphi2, 1:2, sum)/n2
+
         InvS2Phi <- solve(SigmaPhi)
         
         # Maximization step - zeta
@@ -91,6 +102,7 @@ EM.estim2 <- function(data, formula1, formula2, maxiter = 500, epsilon = 1e-4,
             crossprod(ESSphi1, rowsum(re, ID)) - crossprod(rowsum(re, ID), ESSphi1)
         SigmaE <- rss/sum(n1s)
         # SigmaE <- diag(diag(SigmaE))
+
         InvS2E <- solve(SigmaE)
         
         # whether the algorithm converges
@@ -106,6 +118,7 @@ EM.estim2 <- function(data, formula1, formula2, maxiter = 500, epsilon = 1e-4,
                          paste('loglik=',LLnew),'\n');
         
     }
+    print("EM: Almost finish")
     #Variance-covariance matrix
     hessian_matrix <- hessian(neg_loglik, theta, n2 = n2, Y = Y, X = X, ID = ID, n1s = n1s, outcomes = 2)
     var_cov <- solve(hessian_matrix)

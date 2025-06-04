@@ -11,6 +11,7 @@
 gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, intersubj_between_outICC, 
                             intrasubj_between_outICC, n_outcomes, seed){
     
+    
     # Matrix with intersubject intraclass correlation coefficients
     intersubj_iccs <- matrix(NA, n_outcomes, n_outcomes)
     diag_endpoint_icc <- c(out_specific_ICC, out_specific_ICC) #rho_0 of the two outcomes
@@ -84,37 +85,59 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, i
             }
         }
     }
-    sigma_e <- calibration_nonpos_def(sigma_e)
-    sigma_u0 <- calibration_nonpos_def(sigma_u0)
+    sigma_e <- calibration_nonpos_def(sigma_e) # to avoid non-positive definite covariance matrix
+    sigma_u0 <- calibration_nonpos_def(sigma_u0) # to avoid non-positive definite covariance matrix
+    
+    # Generate new seed in case of singular convergence
+    max_attempts <- 4
+    attempt <- 1
+    success <- FALSE
+
     # Random effects
-    for (iteration in seq(ndatasets)) {
-        seeds[iteration] <- (iteration + seed) * iteration
-        set.seed(seeds[iteration])
-        e <- MASS::mvrnorm(n1*n2, rep(0, n_outcomes), sigma_e, tol = 1e-04)
-        u0 <- MASS::mvrnorm(n2, rep(0, n_outcomes), sigma_u0, tol = 1e-04)
-        u0 <- do.call(rbind, replicate(n1, u0, simplify = FALSE))
-        
-        z_bar <- mean(condition)
-        if (n_outcomes == 2) {
-            y1 <- 0 + effect_sizes[1] * (condition - z_bar) + u0[, 1] + e[, 1]
-            y2 <- 0 + effect_sizes[2] * (condition - z_bar) + u0[, 2] + e[, 2]
-            my_data <- cbind(id_subj, id_cluster, y1, y2, condition)
-        } else if (n_outcomes == 3) {
-            y1 <- 0 + effect_sizes[1] * (condition - z_bar) + u0[, 1] + e[, 1]
-            y2 <- 0 + effect_sizes[2] * (condition - z_bar) + u0[, 2] + e[, 2]
-            y3 <- 0 + effect_sizes[3] * (condition - z_bar) + u0[, 3] + e[, 3]
-            my_data <- cbind(id_subj, id_cluster, y1, y2, y3, condition)
+    while (attempt <= max_attempts && success == FALSE) {
+        try({
+            for (iteration in seq(ndatasets)) {
+                seeds[iteration] <- (iteration + seed) * iteration * attempt
+                print(seeds[iteration])
+                set.seed(seeds[iteration])
+                e <- MASS::mvrnorm(n1*n2, rep(0, n_outcomes), sigma_e, tol = 1e-04)
+                u0 <- MASS::mvrnorm(n2, rep(0, n_outcomes), sigma_u0, tol = 1e-04)
+                u0 <- do.call(rbind, replicate(n1, u0, simplify = FALSE))
+                
+                z_bar <- mean(condition)
+                if (n_outcomes == 2) {
+                    y1 <- 0 + effect_sizes[1] * (condition - z_bar) + u0[, 1] + e[, 1]
+                    y2 <- 0 + effect_sizes[2] * (condition - z_bar) + u0[, 2] + e[, 2]
+                    my_data <- cbind(id_subj, id_cluster, y1, y2, condition)
+                } else if (n_outcomes == 3) {
+                    y1 <- 0 + effect_sizes[1] * (condition - z_bar) + u0[, 1] + e[, 1]
+                    y2 <- 0 + effect_sizes[2] * (condition - z_bar) + u0[, 2] + e[, 2]
+                    y3 <- 0 + effect_sizes[3] * (condition - z_bar) + u0[, 3] + e[, 3]
+                    my_data <- cbind(id_subj, id_cluster, y1, y2, y3, condition)
+                }
+                colnames(my_data)[2] <- "cluster"
+                data_list[[iteration]] <- as.data.frame(my_data)
+            }
+            # EM
+            print("EM begins")
+            if (n_outcomes == 2) {
+                estimations <- Map(EM.estim2, data_list, list(as.formula('y1 ~ condition + (1|cluster)')), list(as.formula('y2 ~ condition + (1|cluster)')), list(500))
+            } else if (n_outcomes == 3) {
+                estimations <- Map(EM.estim3, data_list, list(as.formula('y1 ~ condition + (1|cluster)')), list(as.formula('y2 ~ condition + (1|cluster)')), list(as.formula('y3 ~ condition + (1|cluster)')), list(500))
+            }
+            success <- TRUE
+        }, silent = TRUE)
+        if (success == FALSE) {
+            warning("Attempt", attempt, "failed. Regenerating data")
+            attempt <- attempt + 1
         }
-        colnames(my_data)[2] <- "cluster"
-        data_list[[iteration]] <- as.data.frame(my_data)
+    }
+    if (success == FALSE) {
+        
+        stop("Data generation failed after reaching maximum attempts")
+        
     }
     
-    # EM
-    if (n_outcomes == 2) {
-        estimations <- Map(EM.estim2, data_list, list(as.formula('y1 ~ condition')), list(as.formula('y2 ~ condition')), list(500))
-    } else if (n_outcomes == 3) {
-        estimations <- Map(EM.estim3, data_list, list(as.formula('y1 ~ condition')), list(as.formula('y2 ~ condition')), list(as.formula('y3 ~ condition')), list(500))
-    }
     # estimations <- EM.estim2(as.data.frame(my_data), as.formula('y1 ~ condition'), as.formula('y2 ~ condition'), maxiter = 500, verbose = TRUE)
     
     # Extract the elements for outcomes

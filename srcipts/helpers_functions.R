@@ -22,8 +22,8 @@ neg_loglik <- function(theta, n2, Y, X, ID, n1s, outcomes) {
 # Extract results ----------------
 #
 extract_res <- function(x, number) {
-    results <- ifelse(is.null(x[[number]]), NaN, x[[number]])
-    #results <- x[[number]]
+    #results <- ifelse(is.null(x[[number]]), NaN, x[[number]])
+    results <- x[[number]]
     return(results)
 }
 
@@ -138,6 +138,7 @@ calc_ICCs <- function(estimations, n_outcomes) {
 }
 
 # Create the hypothesis to test------------------------------------
+#
 hypothesis_maker <- function(names_h, difference, constrain) {
     #estimates <- sort(estimates, decreasing = TRUE)
     hypothesis <- paste0(names_h[1],"-", names_h[2], constrain, as.character(difference))
@@ -146,7 +147,7 @@ hypothesis_maker <- function(names_h, difference, constrain) {
 
 
 #Calibration method for non-positive definite covariance matrix in multivariate data analysis---------------
-# Source: Chao Huang, Daniel Farewell, Jianxin Pan, A calibration method for non-positive definite covariance 
+# Source of the method: Chao Huang, Daniel Farewell, Jianxin Pan, A calibration method for non-positive definite covariance 
 # matrix in multivariate data analysis, Journal of Multivariate Analysis, Volume 157,2017,Pages 45-52,ISSN 0047-259X,
 # https://doi.org/10.1016/j.jmva.2017.03.001.
 calibration_nonpos_def <- function(cov_matrix) {

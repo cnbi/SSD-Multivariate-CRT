@@ -104,11 +104,10 @@ simulation_parallelised <- function(fx, design_matrix, folder, nclusters, parall
 
 # Collect results
 # Collect results in a matrix---
-collect_results <- function(design_matrix, results_folder, finding, pair, name_results, name_times) {
+collect_results <- function(design_matrix, results_folder, finding, pair, name_results) {
     rows <-  seq(nrow(design_matrix))
-    
     if (finding == "N2") {
-        results_name <- "/ResultsN2Row"
+        results_name <- ifelse(missing(name_results), "/ResultsN2Row", paste0("/", name_results))
         file_name <- "final_results_findN2"
     } else if (finding == "N1") {
         results_name <- "/ResultsN1Row"
