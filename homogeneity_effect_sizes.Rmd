@@ -149,7 +149,7 @@ The Bayes factor always favoured the hypothesis despite which hypothesis is true
     1.  In the case that I choose to use the difference instead, and use bain or BFpack. How can I specify the hypothesis? I imagine that the idea is to test the absolute value of the difference, however bain nor BFpack admits the symbols for absolute values. I have tried sorting the parameters, so the largest is always first, but then I imagine that I have to order the variance-covariance matrix.
     2.  If I test the difference and use my own code, I think that probably I would have to use the t distribution instead of normal, and I am not sure whether I can use the same variance-covariance matrix since I would create the distribution of the difference.
 
-# Testing with difference less than 
+# Testing with difference less than
 
 The hypothesis is that $\beta_1-\beta_2\leq\Delta$ and its complement, where $\beta_p$ correspond to the treatment effect of outcome $p=1, 2..., k$ and $\Delta$ is the difference that the researcher contemplates as the minimum effect treatment to conclude that both outcomes are *similar*. Note that the inequality constraint is only one side, however we expect that the difference could be positive or negative. Thus, the largest treatment effect is first.
 
