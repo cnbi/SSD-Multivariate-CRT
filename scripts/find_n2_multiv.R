@@ -37,12 +37,12 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     }
     
     # Functions
-    source("srcipts/multiv_data_generation.R")
-    source("srcipts/loglikelihood.R")
-    source("srcipts/EM_algorithm.R")
-    source("srcipts/aafbf.R")
-    source("srcipts/helpers_functions.R")
-    source("srcipts/print_results.R")
+    source("scripts/multiv_data_generation.R")
+    source("scripts/loglikelihood.R")
+    source("scripts/EM_algorithm.R")
+    source("scripts/aafbf.R")
+    source("scripts/helpers_functions.R")
+    source("scripts/print_results.R")
     
     
     # Warnings
@@ -63,7 +63,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     if (test == "intersection-union") {
         H1 <- "Slope1>0 & Slope2>0"
         H2 <- "Slope1>0 & Slope2<0"
-        effect_sizesH2 <- effect_sizes * c(1, -1)
+        #effect_sizesH2 <- effect_sizes * c(1, -1)
     } else if (test == "omnibus") {
         H1 <- "Slope1>0 & Slope2>0" #Change this
         H2 <- "Slope1>0 & Slope2<0" #Change this
@@ -122,9 +122,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         if (test == "intersection-union") {
             output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
         } else if (test == "omnibus") {
-            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack), list(difference))
+            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
         } else if ("homogeneity") {
-            
+            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack), list(difference))
             effective_n <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes), list(difference))
             }
         # output_BF_H1 <- BF_multiv(data_H1$estimations, data_H1$Sigma, effective_n, hypothesis = H1, pack = Bayes_pack)

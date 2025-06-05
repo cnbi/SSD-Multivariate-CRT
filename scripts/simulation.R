@@ -51,8 +51,8 @@ colnames(design_matrix_n1) <- c("effect_sizes", "out_specific_ICC", "intersubj_b
                                 "eta", "fixed", "n2", "n1", "test", "Bayes_pack")
 
 # Source
-source("srcipts/functions_simulation.R")
-source("srcipts/find_n2_multiv.R")
+source("scripts/functions_simulation.R")
+source("scripts/find_n2_multiv.R")
 
 #Libraries
 library(dplyr)   # Format tables

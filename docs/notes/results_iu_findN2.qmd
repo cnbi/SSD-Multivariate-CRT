@@ -1,0 +1,103 @@
+---
+title: "Results Intersection-Union Test"
+author: "CNBI"
+format: html
+toc: true
+editor: visual
+---
+
+## Finding number of clusters
+
+### Main effects
+
+The reader can find below figures and a breve description of the effect of each factor on the sample size required to test the intersection-union. The hypotheses under study are
+
+$$
+H_1:\beta_1 \quad \And \quad \beta_2 > 0 
+$$
+
+$$
+H_c: not \quad H_1
+$$
+
+```{r}
+# Libraries
+library(ggplot2)
+library(rlang)
+library(dplyr)
+# Data
+final_results_findN2 <- readRDS("~/GitHub/SSD-Multivariate-CRT/srcipts/findN2_iu/final_results_findN2.RDS")
+
+# Source
+source("~/GitHub/SSD-Multivariate-CRT/srcipts/functions_plots.R")
+```
+
+#### Outcome specific ICC
+
+```{r}
+main_eff_plot(final_results_findN2, x = "n1.final", y = "n2.final", grouping = "out_specific_ICC", fixed = c("eff_size1", "eff_size2", "intersubj_between_outICC", "intrasubj_between_outICC", "BF_thresh"), val_fixed = c(0.3, 0.5, 0.005, 0.2, 10), color_labs = "Outcome specific \nICC", xlab = "Cluster size", ylab = "Number of clusters", legend_pos = "right")
+```
+
+In the illustration it can be seen that there is no difference in the required number of clusters after an outcome-specific ICC of 0.025. Moreover, after a cluster size of 15, the difference between outcome-specific ICCs of 0.01 and higher, disappears.
+
+#### Intersubject between outcomes ICC
+
+```{r}
+main_eff_plot(final_results_findN2, x = "n1.final", y = "n2.final", grouping = "intersubj_between_outICC", fixed = c("eff_size1", "eff_size2", "out_specific_ICC", "intrasubj_between_outICC", "BF_thresh"), val_fixed = c(0.3, 0.5, 0.025, 0.2, 10), color_labs = "Intersubject between \noutcomes ICC", xlab = "Cluster size", ylab = "Number of clusters", legend_pos = "right")
+```
+
+The Figure shows a similar pattern as the previous one with a maximum of 38 clusters for small cluster size and decreasing with the increase of the intersubject between-outcomes ICC. And, again, the difference between the levels of ICC disappears after a cluster size of 15.
+
+#### Intrasubject between-outcomes ICC
+
+```{r}
+main_eff_plot(final_results_findN2, x = "n1.final", y = "n2.final", grouping = "intrasubj_between_outICC", fixed = c("eff_size1", "eff_size2", "out_specific_ICC", "intersubj_between_outICC", "BF_thresh"), val_fixed = c(0.3, 0.5, 0.025, 0.025, 10), color_labs = "Intrasubject between \noutcomes ICC", xlab = "Cluster size", ylab = "Number of clusters", legend_pos = "right")
+```
+
+In this Figure is possible to see a similar pattern as the other ICCs, higher number of clusters for small cluster sizes and decreasing the number of clusters while increasing the cluster size. The disappearance of the gap between the levels of instrasubject between-outcomes ICC after a cluster size of 15 is visible as well.
+
+#### Effect sizes
+
+```{r}
+results_findN2_effe_sizes <- cbind(final_results_findN2, effect_sizes =factor(paste(final_results_findN2$eff_size1, final_results_findN2$eff_size2)))
+main_eff_plot(results_findN2_effe_sizes, x = "n1.final", y = "n2.final", grouping = "effect_sizes", fixed = c("out_specific_ICC", "intersubj_between_outICC", "intrasubj_between_outICC", "BF_thresh"), val_fixed = c(0.025, 0.025, 0.5, 10), color_labs = "Effect sizes \n(1 and 2)", xlab = "Cluster size", ylab = "Number of clusters", legend_pos = "right")
+```
+
+In the Figure showcase the effect of the combination effect sizes of outcome 1 and outcome 2, respectively. It can be seen a clear difference when the effect size include a small effect size, medium, or only high effect sizes. When the pair of effect sizes include a small effect, the number of clusters can reach to 40 and decrease when increasing the cluster size. \
+When the pair of effect sizes are at least medium, the number of clusters is 12 when the cluster size is as small as 5. As in previous figures, the difference between a medium effect sizes and only large effect sizes, disappears after cluster size of 15. Finally, the number of clusters is constant when the pair of effect size include only large effects, regardless of the change in cluster size.
+
+#### Bayes factor threshold
+
+```{r}
+main_eff_plot(final_results_findN2, x = "n1.final", y = "n2.final", grouping = "BF_thresh", fixed = c("eff_size1", "eff_size2", "out_specific_ICC", "intrasubj_between_outICC", "intersubj_between_outICC"), val_fixed = c(0.3, 0.5, 0.05, 0.5, 0.025), color_labs = "Bayes factor \nthreshold", xlab = "Cluster size", ylab = "Number of clusters", legend_pos = "right")
+```
+
+The Figure shows that the number of clusters decreases while increasing the cluster size. For small cluster sizes the number of clusters can reach 40, and for large cluster sizes the number of clusters can reach 8. A larger number of clusters is required for high Bayes factor threshold, however with a cluster size of 30 the difference is no longer shown.
+
+### Interactions of factors
+
+#### ICCs
+
+```{r}
+inter_eff_plot(final_results_findN2, x = "n1.final", y = "n2.final", grouping = "intersubj_between_outICC", fixed = c("eff_size1", "eff_size2", "BF_thresh"),val_fixed = c(0.3, 0.5, 10), color_labs = "Intersubject between \noutcomes ICC", xlab = "Cluster size", ylab = "Number of clusters", legend_pos = "right", panels = c("out_specific_ICC", "intrasubj_between_outICC"))
+```
+
+When intrasubject between-outcomes ICC is fixed at 0.5, there is no difference in the number of clusters between intersubject between-outcomes ICC levels and outcome specific ICC levels. On the other hand, for intrasubject between-outcomes ICC is fixed at 0.2, there is a difference in the required number of clusters between outcome specific ICC of 0.01 and higher. In the lowest level of outcome-specific ICC, there is no difference between intersubject between-outcomes ICC levels and the number of clusters reaches 30 for small cluster sizes and decreases to 8 when the cluster size is 30. For outcome-specific ICC of 0.025 and 0.05 there is no difference in the pattern.
+
+#### ICC and threshold 
+
+```{r}
+inter_eff_plot(final_results_findN2, x = "n1.final", y = "n2.final", grouping = "BF_thresh", fixed = c("eff_size1", "eff_size2", "intersubj_between_outICC"),val_fixed = c(0.3, 0.5, 0.005), color_labs = "Bayes factor \nthreshold", xlab = "Cluster size", ylab = "Number of clusters", legend_pos = "right", panels = c("out_specific_ICC", "intrasubj_between_outICC"))
+```
+
+#### ICCs and effect sizes
+
+```{r}
+inter_eff_plot(results_findN2_effe_sizes, x = "n1.final", y = "n2.final", grouping = "effect_sizes", fixed = c("intersubj_between_outICC", "BF_thresh"),val_fixed = c(0.005, 10), color_labs = "Bayes factor \nthreshold", xlab = "Cluster size", ylab = "Number of clusters", legend_pos = "right", panels = c("out_specific_ICC", "intrasubj_between_outICC"))
+```
+
+#### Threshold, effect sizes and outcome-specific ICC
+
+```{r}
+inter_eff_plot(results_findN2_effe_sizes, x = "n1.final", y = "n2.final", grouping = "effect_sizes", fixed = c("intersubj_between_outICC", "intrasubj_between_outICC"),val_fixed = c(0.025, 0.5), color_labs = "Effect \nsizes", xlab = "Cluster size", ylab = "Number of clusters", legend_pos = "right", panels = c("out_specific_ICC", "BF_thresh"))
+```
