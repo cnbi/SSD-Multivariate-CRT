@@ -80,9 +80,9 @@ BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, differenc
         } else if (pack == "bain") {
             # Using bain
             Bf <- bain(estimates, hypothesis, n = effective_n, Sigma = sigma)
-            Bf1u <- Bf$fit$Fit[1]/Bf$fit$Com[1]
+            Bf1u <- Bf$fit$Fit[1] / Bf$fit$Com[1]
             Bf1c <- Bf$fit$BF.c[1]
-            Bf_1c <- (Bf$fit$Fit[1]/Bf$fit$Com[1])/(Bf$fit$Fit[3]/Bf$fit$Com[3])
+            Bf_1c <- (Bf$fit$Fit[1] / Bf$fit$Com[1]) / (Bf$fit$Fit[3]/Bf$fit$Com[3])
             PMP <- Bf$fit$PMPc[1]
         } else {
             # Using my own code
