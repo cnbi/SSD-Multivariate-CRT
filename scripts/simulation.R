@@ -51,21 +51,32 @@ colnames(design_matrix_n1) <- c("effect_sizes", "out_specific_ICC", "intersubj_b
                                 "eta", "fixed", "n2", "n1", "test", "Bayes_pack")
 
 # Source
-source("functions_simulation.R")
-source("find_n2_multiv.R")
+source("scripts/functions_simulation.R")
+source("scripts/find_n2_multiv.R")
 
 #Libraries
 library(dplyr)   # Format tables
 library(purrr)    # Format tables
 
 # Creation folder for results
-folder_results <- "findN2_iu"
+folder_results <- "srcipts/findN2_iu"
 if (!dir.exists(folder_results)) {dir.create(folder_results)}
-missing_rows <- c(167:nrow(design_matrix_n2))
 
 # Loop for every row
-for (Row in missing_rows) {
+for (Row in 1) {
     seed <- 2106
     run_simulation(Row, name_results = "findN2_iu_", name_times = "time_findN2_iu", 
                           design_matrix = design_matrix_n2, results_folder = folder_results, seed)
+}
+
+# Collect results
+collect_results(design_matrix = design_matrix_n2, results_folder = folder_results, finding = "N2", 
+                name_results = "findN2_iu_")
+index_missingBF <- which(is.na(final_results_findN2$median.BF1c))
+missing_BF <- final_results_findN2[which(is.na(final_results_findN2$median.BF1c)), ]
+# Loop for every row
+for (Row in index_missingBF) {
+    seed <- 2106
+    run_simulation(Row, name_results = "findN2_iu_", name_times = "time_findN2_iu", 
+                   design_matrix = design_matrix_n2, results_folder = folder_results, seed)
 }

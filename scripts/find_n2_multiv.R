@@ -37,12 +37,12 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     }
     
     # Functions
-    source("multiv_data_generation.R")
-    source("loglikelihood.R")
-    source("EM_algorithm.R")
-    source("aafbf.R")
-    source("helpers_functions.R")
-    source("print_results.R")
+    source("scripts/multiv_data_generation.R")
+    source("scripts/loglikelihood.R")
+    source("scripts/EM_algorithm.R")
+    source("scripts/aafbf.R")
+    source("scripts/helpers_functions.R")
+    source("scripts/print_results.R")
     
     
     # Warnings

@@ -68,35 +68,46 @@ calc_aafbf <- function(type, estimates, sigma, b, n_eff, outcome_type) {
 BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, difference){
     name_parameters <- unique(stringr::str_extract_all(hypothesis, "\\b[[:alnum:]_]+\\b")[[1]])
     estimates <- estimates[names(estimates) %in% name_parameters]
-    if (pack == "BFpack") {
-        # Using BFpack
-        Bf <- BF(estimates, Sigma = sigma, n = effective_n, hypothesis = hypothesis)
-        Bf1u <- Bf$BFtable_confirmatory[1, 6]
-        Bf1c <- Bf$BFmatrix_confirmatory[1, 2]
-        Bf_1c <- Bf$BFtable_confirmatory[1, 6] / Bf$BFtable_confirmatory[2, 6]
-        PMP <- Bf$BFtable_confirmatory[1, 8]
-    } else if (pack == "bain") {
-        # Using bain
-        Bf <- bain(estimates, hypothesis, n = effective_n, Sigma = sigma)
-        Bf1u <- Bf$fit$Fit[1]/Bf$fit$Com[1]
-        Bf1c <- Bf$fit$BF.c[1]
-        Bf_1c <- (Bf$fit$Fit[1]/Bf$fit$Com[1])/(Bf$fit$Fit[3]/Bf$fit$Com[3])
-        PMP <- Bf$fit$PMPc[1]
-    } else {
-        # Using my own code
-        # # Complexities
-        # complexity_h1 <- 1 - pmvnorm(lower = c(0, 0), upper = c(Inf, Inf), mean = c(0, 0), sd = sqrt(sigma[[2]] / b_calc))
-        # 
-        # # Fit
-        # fit_h1 <- 1 - pmvnorm(lower = c(0, 0), upper = c(Inf, Inf), mean = estimates, sigma = sigma) # i could include lower as an argument that can be changed
-        # fit_hc <- pmvnorm(lower = c(-Inf, -Inf), upper = c(0, 0), mean = estimates, sigma = sigma)
-        # 
-        # # Calculation of BFs
-        # 
-        # 
-        # # Calculataion of PMPs
+    good_result <- FALSE
+    while (good_result == FALSE) {
+        if (pack == "BFpack") {
+            # Using BFpack
+            Bf <- BF(estimates, Sigma = sigma, n = effective_n, hypothesis = hypothesis)
+            Bf1u <- Bf$BFtable_confirmatory[1, 6]
+            Bf1c <- Bf$BFmatrix_confirmatory[1, 2]
+            Bf_1c <- Bf$BFtable_confirmatory[1, 6] / Bf$BFtable_confirmatory[2, 6]
+            PMP <- Bf$BFtable_confirmatory[1, 8]
+        } else if (pack == "bain") {
+            # Using bain
+            Bf <- bain(estimates, hypothesis, n = effective_n, Sigma = sigma)
+            Bf1u <- Bf$fit$Fit[1]/Bf$fit$Com[1]
+            Bf1c <- Bf$fit$BF.c[1]
+            Bf_1c <- (Bf$fit$Fit[1]/Bf$fit$Com[1])/(Bf$fit$Fit[3]/Bf$fit$Com[3])
+            PMP <- Bf$fit$PMPc[1]
+        } else {
+            # Using my own code
+            # # Complexities
+            # complexity_h1 <- 1 - pmvnorm(lower = c(0, 0), upper = c(Inf, Inf), mean = c(0, 0), sd = sqrt(sigma[[2]] / b_calc))
+            # 
+            # # Fit
+            # fit_h1 <- 1 - pmvnorm(lower = c(0, 0), upper = c(Inf, Inf), mean = estimates, sigma = sigma) # i could include lower as an argument that can be changed
+            # fit_hc <- pmvnorm(lower = c(-Inf, -Inf), upper = c(0, 0), mean = estimates, sigma = sigma)
+            # 
+            # # Calculation of BFs
+            # 
+            # 
+            # # Calculataion of PMPs
+        }
+        if (any(is.na(c(Bf1u, Bf1c, PMP)))) {
+            good_result <- FALSE
+        } else if (any(is.nan(c(Bf1u, Bf1c, PMP)))) {
+            good_result <- FALSE
+        } else if (any(is.null(c(Bf1u, Bf1c, PMP)))) {
+            good_result <- FALSE
+        } else {
+            good_result <- TRUE
+            }
     }
     results <- list(BF.1u = Bf1u, BF.1c = Bf1c, PMP.1c = PMP)
     return(results)
-    
 }
