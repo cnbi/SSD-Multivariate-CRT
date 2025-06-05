@@ -69,4 +69,3 @@ for (Row in missing_rows) {
     run_simulation(Row, name_results = "findN2_iu_", name_times = "time_findN2_iu", 
                           design_matrix = design_matrix_n2, results_folder = folder_results, seed)
 }
-#166
