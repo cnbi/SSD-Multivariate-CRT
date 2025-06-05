@@ -57,8 +57,8 @@ inter_eff_plot <- function(data, x, y, grouping, fixed, val_fixed,
                                                  labeller = labels_grid)
             
         } 
-        return(final_plot)
     }
+    return(final_plot)
 }
 
 inter_eff_plot(data = final_results_findN2,
