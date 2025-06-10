@@ -40,18 +40,29 @@ print_results <- function(object_result) {
 # print_results(ssd_results_null)
 
 # Print SSD multivariate CRT---------------------------------------------------
-print_results_multiv <- function(object_result, test, hypothesis) {
+print_results_multiv <- function(object_result, test, hypothesis1, hypothesis2) {
     title <- "Final sample size"
     cat(paste("\n", title, "\n", sep = ""))
     row <- paste(rep("=", nchar(title)), collapse = "")
     cat(row, "\n")
-    if (test == "intersection-union") {   # Print intersection-union
+    results_df <- data_frame("n2" = integer(),
+                             "n1" = integer(),
+                             "col_name1" = numeric(),
+                             "col_name2" = numeric())
+    names(results_df) <- c("Number of clusters", "Cluster size", 
+                           paste("P(BF.12 >", object_result$BF_thres,"| H1) > ", object_result$eta),
+                           paste("P(BF.21 >", object_result$BF_thres,"| H2) > ", object_result$eta))
+    results_df[1, 1] <- object_result$n2 #n2
+    results_df[1, 2] <- object_result$n1 #n1
+    results_df[1, 3] <- object_result$Proportion.BF12 #BF_12
+    results_df[1, 4] <- object_result$Proportion.BF21 #BF_21
+    if (test == "intersection-union") {    # Print intersection-union
+        cat("Sample Size Determination for Intersection-Union Test")
         cat("Hypotheses:", "\n")
-        cat("    H1:", hypothesis, "\n")
-        cat("    Hc:", "complement", "\n")
-        cat("Using a cluster size = ", object_result$n1, " and number of clusters = ", object_result$n2, "\n")
-        cat("P (BF.1c > ", object_result$BF_thres, " | H1) = ", object_result$Proportion.BF1c, "\n")
-        cat("On average the Posterior Model Probability is", mean(object_result$data_H1[, "PMP.1c"]))
+        cat("    H1:", hypothesis1, "\n")
+        cat("    H2:", hypothesis2, "\n")
+        print(results_df)
+        cat("***********************************************************************", "\n")
     } else {                                    # Print for null vs informative
         n_object <- length(object_result)
         b_number <- n_object - 3

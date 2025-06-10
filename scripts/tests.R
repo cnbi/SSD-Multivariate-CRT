@@ -1,7 +1,7 @@
 ############# TESTS###########################################
 
-source("find_n2_multiv.R")
-
+source("scripts/find_n2_multiv.R")
+options(error = recover)
 # Hypothesis true and bain
 start_time <- Sys.time()
 SSD_mult_CRT("intersection-union",

@@ -81,9 +81,15 @@ BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, differenc
             # Using bain
             Bf <- bain(estimates, hypothesis, n = effective_n, Sigma = sigma)
             Bf1u <- Bf$fit$Fit[1] / Bf$fit$Com[1]
+            Bf2u <- Bf$fit$Fit[2] / Bf$fit$Com[2]
+            Bf12 <- Bf1u / Bf2u
+            Bf21 <- Bf2u / Bf1u
             Bf1c <- Bf$fit$BF.c[1]
+            Bf2c <- Bf$fit$BF.c[2]
             Bf_1c <- (Bf$fit$Fit[1] / Bf$fit$Com[1]) / (Bf$fit$Fit[3]/Bf$fit$Com[3])
-            PMP <- Bf$fit$PMPc[1]
+            PMP1c <- Bf$fit$PMPc[1]
+            PMP2c <- Bf$fit$PMPc[2]
+            PMPc <-  Bf$fit$PMPc[4]
         } else {
             # Using my own code
             # # Complexities
@@ -98,16 +104,18 @@ BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, differenc
             # 
             # # Calculataion of PMPs
         }
-        if (any(is.na(c(Bf1u, Bf1c, PMP)))) {
+        if (any(is.na(c(Bf1u, Bf1c, PMP1c, Bf2u, Bf2c, PMP2c, Bf12, Bf21, PMPc)))) {
             good_result <- FALSE
-        } else if (any(is.nan(c(Bf1u, Bf1c, PMP)))) {
+        } else if (any(is.nan(c(Bf1u, Bf1c, PMP1c, Bf2u, Bf2c, PMP2c, Bf12, Bf21, PMPc)))) {
             good_result <- FALSE
-        } else if (any(is.null(c(Bf1u, Bf1c, PMP)))) {
+        } else if (any(is.null(c(Bf1u, Bf1c, PMP1c, Bf2u, Bf2c, PMP2c, Bf12, Bf21, PMPc)))) {
             good_result <- FALSE
         } else {
             good_result <- TRUE
             }
     }
-    results <- list(BF.1u = Bf1u, BF.1c = Bf1c, PMP.1c = PMP)
+    results <- list(BF.1u = Bf1u, BF.2u = Bf2u, BF.12 = Bf12, BF.21 = Bf21, 
+                    BF.1c = Bf1c, BF.2c = Bf2c, PMP.1c = PMP1c, PMP.2c = PMP2c, 
+                    PMP.c = PMPc)
     return(results)
 }
