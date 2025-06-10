@@ -2,6 +2,7 @@
 
 source("find_n2_multiv.R")
 
+# Intersection-union test ------------------------------------------------------
 # Hypothesis true and bain
 start_time <- Sys.time()
 SSD_mult_CRT("intersection-union",
@@ -189,3 +190,26 @@ b <- SSD_mult_CRT("intersection-union",
                   Bayes_pack = "bain")
 end_time <- Sys.time()
 as.numeric(difftime(end_time, start_time, units = "mins"))
+
+# Homogeneity of effect size test ----------------------------------------------
+# Testing warning
+a <- SSD_mult_CRT("homogeneity", effect_sizes = c(0.4, 0.5),
+                  n1 = 10, n2 = 30, ndatasets = 10, out_specific_ICC = 0.025, 
+                  intersubj_between_outICC = 0.022, intrasubj_between_outICC = 0.5,
+                  BF_thresh = 5, eta = 0.8, fixed = "n1", difference = 0.2,
+                  max = 100, batch_size = 100, seed = 1855, Bayes_pack = "bain")
+
+# H1 must be true: the effect sizes are similar
+a <- SSD_mult_CRT("homogeneity", effect_sizes = c(0.5, 0.4),
+                  n1 = 10, n2 = 30, ndatasets = 10, out_specific_ICC = 0.025, 
+                  intersubj_between_outICC = 0.022, intrasubj_between_outICC = 0.5,
+                  BF_thresh = 5, eta = 0.8, fixed = "n1", difference = 0.2,
+                  max = 500, batch_size = 100, seed = 1855, Bayes_pack = "bain")
+
+
+# What happens if I have exactly the same difference as the one specified?
+a <- SSD_mult_CRT("homogeneity", effect_sizes = c(0.5, 0.3),
+                  n1 = 10, n2 = 30, ndatasets = 10, out_specific_ICC = 0.025, 
+                  intersubj_between_outICC = 0.022, intrasubj_between_outICC = 0.5,
+                  BF_thresh = 5, eta = 0.8, fixed = "n1", difference = 0.2,
+                  max = 300, batch_size = 100, seed = 1855, Bayes_pack = "bain")

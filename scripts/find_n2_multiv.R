@@ -56,7 +56,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     if (eta < 0) stop("The probability of exceeding Bayes Factor threshold must be a positive value")
     if (is.character(fixed) == FALSE) stop("Fixed can only be a character indicating n1 or n2.")
     if (fixed %in% c("n1", "n2") == FALSE) stop("Fixed can only be a character indicating n1 or n2.")
-    #if ((b == round(b)) == FALSE) stop("The fraction of information (b) must be an integer")
+    if ((test == "homogeneity") && (effect_sizes[1] < effect_sizes[2]))
+        stop("Effect size 1 must be larger than effect size 2")
+    
     #TODO: Add warnings for ICCs.
     
     # Hypotheses
@@ -92,6 +94,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     ultimate_sample_sizes <- FALSE
     
     results_H1 <- matrix(NA, ndatasets, 3)
+    options(error = recover)
     
     # Data generation
     while (ultimate_sample_sizes == FALSE) {
@@ -113,7 +116,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         } else if (test == "omnibus") {
             effective_n <- effective_sample(n1, n2)
         } else if (test == "homogeneity") {
-            effective_n <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes), list(difference))
+            effective_n <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes))
         }
         effective_n <- Map(min, effective_n)
         
@@ -123,9 +126,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
         } else if (test == "omnibus") {
             output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
-        } else if ("homogeneity") {
-            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack), list(difference))
-            effective_n <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes), list(difference))
+        } else if (test == "homogeneity") {
+            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
             }
         # output_BF_H1 <- BF_multiv(data_H1$estimations, data_H1$Sigma, effective_n, hypothesis = H1, pack = Bayes_pack)
         
