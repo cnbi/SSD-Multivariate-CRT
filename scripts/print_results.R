@@ -63,6 +63,14 @@ print_results_multiv <- function(object_result, test, hypothesis1, hypothesis2) 
         cat("    H2:", hypothesis2, "\n")
         print(results_df)
         cat("***********************************************************************", "\n")
+    } else if (test == "homogeneity") {    # Print homogeneity of effect size
+        cat("Hypotheses:", "\n")
+        cat("    H1:", hypothesis, "\n")
+        cat("    Hc:", "complement", "\n")
+        cat("Using a cluster size = ", object_result$n1, " and number of clusters = ", object_result$n2, "\n")
+        cat("P (BF.1c > ", object_result$BF_thres, " | H1) = ", object_result$Proportion.BF1c, "\n")
+        cat("On average the Posterior Model Probability is", mean(object_result$data_H1[, "PMP.1c"]))
+
     } else {                                    # Print for null vs informative
         n_object <- length(object_result)
         b_number <- n_object - 3
