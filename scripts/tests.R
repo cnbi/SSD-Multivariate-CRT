@@ -46,14 +46,14 @@ SSD_mult_CRT("intersection-union",
              effect_sizes = c(0.2, 0.4),
              n1 = 10,
              n2 = 26,
-             ndatasets = 5,
+             ndatasets = 10,
              out_specific_ICC = 0.1,
              intersubj_between_outICC = 0.08,
              intrasubj_between_outICC = 0.05,
              BF_thresh = 3,
              eta = 0.8,
              fixed = "n1",
-             max = 50,
+             max = 100,
              Bayes_pack = "bain")
 end_time <- Sys.time()
 as.numeric(difftime(end_time, start_time, units = "mins"))
