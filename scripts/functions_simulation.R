@@ -43,9 +43,10 @@ run_simulation <- function(Row, name_results, name_times, design_matrix, results
 
 
 # Simulation parallelised
-#required_fx: Vector with the objects and functions required to run the simulation
+#required_fx: Vector with the objects and functions required to run the simulation.
+ ## It includes name_results, name_times, seed, function needed.
 
-simulation_parallelised <- function(fx, design_matrix, folder, nclusters, parall,
+simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
                                     required_fx){
     
     # Packages
@@ -53,10 +54,10 @@ simulation_parallelised <- function(fx, design_matrix, folder, nclusters, parall
     if (!require(foreach)) {install.packages("foreach")}
     if (!require(doParallel)) {install.packages("doParallel")}
     if (!require(dplyr)) {install.packages("dplyr")}
-    if(!require(future.apply)){install.packages("future.apply")}
+    if(!require(future.apply)) {install.packages("future.apply")}
     nrow_design <- nrow(design_matrix)
     
-    if (parall == "doParallel"){
+    if (parall == "doParallel") {
         # Detect
         ncluster <- detectCores() / 2
         # Create clusters and register them
@@ -77,7 +78,12 @@ simulation_parallelised <- function(fx, design_matrix, folder, nclusters, parall
         
     } else if (parall == "forEach") {
         # Detect
-        ncluster <- detectCores() / 2
+        if (missing(nclusters)) {
+            ncluster <- detectCores() / 2
+        } else {
+            ncluster <- nclusters
+        }
+       
         # Create clusters and register them
         cl <- makeCluster(ncluster)
         registerDoParallel(cl)
@@ -95,8 +101,17 @@ simulation_parallelised <- function(fx, design_matrix, folder, nclusters, parall
         stopImplicitCluster()
         
     } else if (parall == "future") {
-        plan(multisession)
-        future_lapply()
+        if (missing(nclusters)) {
+            nclusters <- detectCores() / 2
+        } else {
+            nclusters <- nclusters
+        }
+        plan(multisession, workers = nclusters)
+        rows_to_run <- 1:nrow_design
+        future_lapply(rows_to_run, function(Row){
+            run_simulation(Row, name_results = required_fx[1], name_times = required_fx[2],
+                           design_matrix = design_matrix, results_folder = folder,seed = required_fx[3])
+        })
         
     }
     

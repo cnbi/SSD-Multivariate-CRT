@@ -89,7 +89,7 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, i
     sigma_u0 <- calibration_nonpos_def(sigma_u0) # to avoid non-positive definite covariance matrix
     
     # Generate new seed in case of singular convergence
-    max_attempts <- 4
+    max_attempts <- 10
     attempt <- 1
     success <- FALSE
 
