@@ -169,3 +169,11 @@ calibration_nonpos_def <- function(cov_matrix) {
         return(cov_matrix)  # Return original matrix if it's already positive definite
     }
 }
+
+# Print hypotheses ---------------------------------------------
+print_hypotheses <- function(list_hypo) {
+    cat("Hypotheses:", "\n")
+    for (hypoth in 1:length(list_hypo)) {
+        cat(paste0("    H", hypoth, ":"), list_hypo[[hypoth]], "\n")
+    }
+}

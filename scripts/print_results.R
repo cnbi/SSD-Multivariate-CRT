@@ -40,49 +40,39 @@ print_results <- function(object_result) {
 # print_results(ssd_results_null)
 
 # Print SSD multivariate CRT---------------------------------------------------
-print_results_multiv <- function(object_result, test, hypothesis1, hypothesis2, hypothesis3, hypothesis4) {
+print_results_multiv <- function(object_result, test, list_hypo) {
     title <- "Final sample size"
     cat(paste("\n", title, "\n", sep = ""))
     row <- paste(rep("=", nchar(title)), collapse = "")
     cat(row, "\n")
-    results_df <- data.frame("n2" = integer(),
-                             "n1" = integer(),
-                             "P_BF12" = numeric(),
-                             "P_BF13" = numeric(),
-                             "P_BF14" = numeric(),
-                             "P_BF21" = numeric(),
-                             "P_BF31" = numeric(),
-                             "P_BF41" = numeric())
-    # names(results_df) <- c("Number of clusters", "Cluster size", 
-    #                        paste("P(BF.12 >", object_result$BF_thres,"| H1) > ", object_result$eta),
-    #                        paste("P(BF.13 >", object_result$BF_thres,"| H1) > ", object_result$eta),
-    #                        paste("P(BF.14 >", object_result$BF_thres,"| H1) > ", object_result$eta),
-    #                        paste("P(BF.21 >", object_result$BF_thres,"| H2) > ", object_result$eta),
-    #                        paste("P(BF.31 >", object_result$BF_thres,"| H3) > ", object_result$eta),
-    #                        paste("P(BF.41 >", object_result$BF_thres,"| H4) > ", object_result$eta))
-    
-    names(results_df) <- c("Number of clusters", "Cluster size", 
-                           paste("P(BF.12 >", object_result$BF_thres,"| H1)"),
-                           paste("P(BF.13 >", object_result$BF_thres,"| H1)"),
-                           paste("P(BF.14 >", object_result$BF_thres,"| H1)"),
-                           paste("P(BF.21 >", object_result$BF_thres,"| H2)"),
-                           paste("P(BF.31 >", object_result$BF_thres,"| H3)"),
-                           paste("P(BF.41 >", object_result$BF_thres,"| H4)"))
-    results_df[1, 1] <- object_result$n2 #n2
-    results_df[1, 2] <- object_result$n1 #n1
-    results_df[1, 3] <- object_result$Proportion.BF12 #BF_12
-    results_df[1, 4] <- object_result$Proportion.BF13 #BF_13
-    results_df[1, 5] <- object_result$Proportion.BF14 #BF_14
-    results_df[1, 6] <- object_result$Proportion.BF21 #BF_21
-    results_df[1, 7] <- object_result$Proportion.BF31 #BF_31
-    results_df[1, 8] <- object_result$Proportion.BF41 #BF_41
+
     if (test == "intersection-union") {    # Print intersection-union
         cat("Sample Size Determination for Intersection-Union Test")
-        cat("Hypotheses:", "\n")
-        cat("    H1:", hypothesis1, "\n")
-        cat("    H2:", hypothesis2, "\n")
-        cat("    H3:", hypothesis3, "\n")
-        cat("    H4:", hypothesis4, "\n")
+        print_hypotheses(list_hypo)
+        results_df <- data.frame("n2" = integer(),
+                                 "n1" = integer(),
+                                 "P_BF12" = numeric(),
+                                 "P_BF13" = numeric(),
+                                 "P_BF14" = numeric(),
+                                 "P_BF21" = numeric(),
+                                 "P_BF31" = numeric(),
+                                 "P_BF41" = numeric())
+
+        names(results_df) <- c("Number of clusters", "Cluster size", 
+                               paste("P(BF.12 >", object_result$BF_thres,"| H1)"),
+                               paste("P(BF.13 >", object_result$BF_thres,"| H1)"),
+                               paste("P(BF.14 >", object_result$BF_thres,"| H1)"),
+                               paste("P(BF.21 >", object_result$BF_thres,"| H2)"),
+                               paste("P(BF.31 >", object_result$BF_thres,"| H3)"),
+                               paste("P(BF.41 >", object_result$BF_thres,"| H4)"))
+        results_df[1, 1] <- object_result$n2 #n2
+        results_df[1, 2] <- object_result$n1 #n1
+        results_df[1, 3] <- object_result$Proportion.BF12 #BF_12
+        results_df[1, 4] <- object_result$Proportion.BF13 #BF_13
+        results_df[1, 5] <- object_result$Proportion.BF14 #BF_14
+        results_df[1, 6] <- object_result$Proportion.BF21 #BF_21
+        results_df[1, 7] <- object_result$Proportion.BF31 #BF_31
+        results_df[1, 8] <- object_result$Proportion.BF41 #BF_41
         
         # Function to create a nicely formatted table with | as separators
         print_table <- function(df) {
@@ -120,52 +110,6 @@ print_results_multiv <- function(object_result, test, hypothesis1, hypothesis2, 
         # cat(knitr::kable(results_df, format = "pipe"))
         print(results_df)
         cat(paste(c("\u03B7 = ", object_result$eta)), "\n")
-        # Second header row: individual headers for each column
-        # second_header_row <- c("Number of clusters", "Cluster size", "i = 2", "i = 3", "i = 4", "i = 2", "i = 3", "i = 4")
-        # 
-        # # Define the column widths (based on the longest strings in your headers and data)
-        # col_widths <- c(nchar("Number of clusters"), nchar("Cluster size"), 
-        #                 max(nchar(header1), nchar("i = 2")), 
-        #                 max(nchar(header1), nchar("i = 2")), max(nchar(header1), nchar("i = 2")), 
-        #                 max(nchar(header2), nchar("i = 2")), max(nchar(header2), nchar("i = 2")), 
-        #                 max(nchar(header2), nchar("i = 2")))
-        # 
-        # # Adjust the first header row to make the columns align properly
-        # first_header_row <- c(
-        #     sprintf("%-*s", col_widths[1], ""),  # First two columns (white space)
-        #     sprintf("%-*s", col_widths[2], ""), 
-        #     sprintf("%-*s", col_widths[3] + col_widths[4] + col_widths[5], header1),  # Merge the next three columns for header1
-        #     sprintf("%-*s", col_widths[6] + col_widths[7] + col_widths[8], header2)   # Merge the last three columns for header2
-        # )
-        # 
-        # 
-        # # Create a separator line for the header
-        # a <- (col_widths * 8)
-        # separator_line <- paste(rep("-", a, collapse = ""))
-        # 
-        # # Create a function to format each row of the table
-        # plain_table <- apply(results_df, 1, function(row) {
-        #     paste(sprintf("%-*s", col_widths[1], row[1]), 
-        #           sprintf("%-*s", col_widths[2], row[2]), 
-        #           sprintf("%-*s", col_widths[3], row[3]),
-        #           sprintf("%-*s", col_widths[4], row[4]),
-        #           sprintf("%-*s", col_widths[5], row[5]),
-        #           sprintf("%-*s", col_widths[6], row[6]),
-        #           sprintf("%-*s", col_widths[7], row[7]),
-        #           sprintf("%-*s", col_widths[8], row[8]), collapse = " | ")
-        # })
-        # 
-        # # Print the table with two headers and separator in console
-        # cat(paste(separator_line, collapse = "\n"), "\n")
-        # cat(paste(first_header_row, collapse = " | "), "\n")  # Print the first header row
-        # cat(paste(separator_line, collapse = "\n"), "\n")
-        # cat(paste(second_header_row, collapse = " | "), "\n")  # Print the second header row
-        # cat(paste(separator_line, collapse = "\n"), "\n")  # Print the separator
-        # cat(paste(plain_table, collapse = "|"), "\n")  # Print the table rows
-        # kbl(results_df) %>% 
-        #     kable_classic() %>% 
-        #     add_header_above(c(" " = 2, header1 = 3, header2 = 3))
-        # print(results_df)
         cat("***********************************************************************", "\n")
     } else if (test == "homogeneity") {    # Print homogeneity of effect size
         cat("Hypotheses:", "\n")
