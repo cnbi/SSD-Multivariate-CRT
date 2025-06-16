@@ -101,7 +101,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         results_H1 <- matrix(NA, ndatasets, 5)
         results_H2 <- matrix(NA, ndatasets, 3)
         results_H3 <- matrix(NA, ndatasets, 3)
-        results_H4 <- matrix(NA, ndatasets, 3x)
+        results_H4 <- matrix(NA, ndatasets, 3)
     } else if (test == "homogeneity") {
         results_H1 <- matrix(NA, ndatasets, 6)
         results_H2 <- matrix(NA, ndatasets, 4)
@@ -165,9 +165,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             effective_nH3 <- Map(min, effective_nH3)
             effective_nH4 <- Map(effective_sample, list(n1), list(n2), data_H4$ICCs, list(n_outcomes))
             effective_nH4 <- Map(min, effective_nH4)
-                    } else if (test == "omnibus") {
+        } else if (test == "omnibus") {
             effective_n <- effective_sample(n1, n2)
-            effective_n <- Map(min, effective_n)effective_n <- Map(min, effective_n)
+            effective_n <- Map(min, effective_n)
         } else if (test == "homogeneity") {
             effective_n <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes))
             effective_n <- Map(min, effective_n)
@@ -437,7 +437,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     }
     
     # Final output
-    if (test == "intersection-union"){
+    if (test == "intersection-union") {
         print_results_multiv(SSD_object, test, H1, H2, H3, H4)
     } else if (test == "homogeneity") {
         print_results_multiv(SSD_object, test, H1, H2)
