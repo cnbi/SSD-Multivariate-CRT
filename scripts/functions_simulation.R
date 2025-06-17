@@ -13,12 +13,12 @@ run_simulation <- function(Row, name_results, name_times, design_matrix, results
                                   effect_sizes = c(design_matrix[Row, "eff_size1"], design_matrix[Row, "eff_size2"]), 
                                   n1 = design_matrix[Row, "n1"],
                                   n2 = design_matrix[Row, "n2"], 
-                                  ndatasets = 100,
+                                  ndatasets = 1000,
                                   out_specific_ICC = design_matrix[Row, "out_specific_ICC"], 
                                   intersubj_between_outICC = design_matrix[Row, "intersubj_between_outICC"], 
                                   intrasubj_between_outICC = design_matrix[Row, "intrasubj_between_outICC"],
                                   BF_thresh = design_matrix[Row, "BF_thresh"], eta = 0.8, 
-                                  fixed = as.character(design_matrix[Row, "fixed"]), max = 1000, 
+                                  fixed = as.character(design_matrix[Row, "fixed"]), max = 500, 
                                   batch_size = 1000,
                                   Bayes_pack = as.character(design_matrix[Row, "Bayes_pack"]),
                                 seed = seed)
@@ -54,19 +54,23 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
     if (!require(foreach)) {install.packages("foreach")}
     if (!require(doParallel)) {install.packages("doParallel")}
     if (!require(dplyr)) {install.packages("dplyr")}
-    if(!require(future.apply)) {install.packages("future.apply")}
+    if (!require(future.apply)) {install.packages("future.apply")}
     nrow_design <- nrow(design_matrix)
     
     if (parall == "doParallel") {
         # Detect
-        ncluster <- detectCores() / 2
+        if (missing(nclusters)) {
+            ncluster <- detectCores() / 2
+        } else {
+            ncluster <- nclusters
+        }
         # Create clusters and register them
         cl <- makeCluster(ncluster)
         registerDoParallel(cl)
         # Export libraries, functions and variables
         clusterExport(cl, required_fx)
         # Distribute rows into clusters
-        dentify_clusters <- cut(seq(nrow_design), breaks = ncluster, labels = FALSE)
+        # identify_clusters <- cut(seq(nrow_design), breaks = ncluster, labels = FALSE)
         rows_divided <- split(seq(nrow_design), 1:ncluster)
         rows_divided <- lapply(seq(nrow_design), function(x) list(x))
         # Apply simulation
@@ -90,11 +94,13 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
         # Distribute rows into clusters
         rows_divided <- split(seq(nrow_design), 1:ncluster)
         # Export libraries, functions and variables
-        clusterExport(cl, required_fx)
-        
+        # clusterExport(cl)
+        browser()
         # Parallelisation
-        foreach(Rows = rows_divided) %dopar% {
-            run_simulation(Rows)
+        foreach(Rows = rows_divided, .errorhandling = "remove") %dopar% {
+            run_simulation(Rows, name_results = required_fx[1], name_times = required_fx[2],
+                           design_matrix = design_matrix, results_folder = folder,
+                           seed = as.integer(required_fx[3]))
         }
         # Stop clusters
         stopCluster(cl)

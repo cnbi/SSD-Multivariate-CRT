@@ -89,7 +89,7 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, i
     sigma_u0 <- calibration_nonpos_def(sigma_u0) # to avoid non-positive definite covariance matrix
     
     # Generate new seed in case of singular convergence
-    max_attempts <- 10
+    max_attempts <- 100000
     attempt <- 1
     success <- FALSE
 
@@ -128,12 +128,12 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, i
             success <- TRUE
         }, silent = TRUE)
         if (success == FALSE) {
-            warning("Attempt", attempt, "failed. Regenerating data")
+            warning("Attempt ", attempt, " failed. Regenerating data")
             attempt <- attempt + 1
         }
     }
     if (success == FALSE) {
-        
+        print(attempt)
         stop("Data generation failed after reaching maximum attempts")
         
     }

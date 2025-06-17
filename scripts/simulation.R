@@ -90,5 +90,65 @@ folder_results <- "scripts/FindN2_iu_new"
 if (!dir.exists(folder_results)) {dir.create(folder_results)}
 # Run simulation
 arg_fx <- c("FindN2_IU_", "TimeN2_IU", 2106)
-simulation_parallelised(design_matrix = design_matrix_n2, folder = folder_results,nclusters = 5,
-                        parall = "future", required_fx = arg_fx)s
+simulation_parallelised(design_matrix = design_matrix_n2, folder = folder_results, nclusters = 5,
+                        parall = "do", required_fx = arg_fx)
+
+simulation_parallelised(design_matrix = design_matrix_n2, folder = folder_results, nclusters = 5,
+                        parall = "forEach", required_fx = arg_fx)
+
+
+# Detect -----------------------------------------------
+nclusters <- 5
+if (missing(nclusters)) {
+    ncluster <- detectCores() / 2
+} else {
+    ncluster <- nclusters
+}
+nrow_design <- design_matrix_n2
+required_fx <- arg_fx
+design_matrix <- design_matrix_n2
+folder <- folder_results
+# Create clusters and register them
+cl <- makeCluster(ncluster)
+registerDoParallel(cl)
+# Distribute rows into clusters
+rows_divided <- split(seq(nrow_design), 1:ncluster)
+# Export libraries, functions and variables
+# Parallelisation
+future::plan(multisession, workers = 4)
+rows_to_run <- 1:nrow(design_matrix)
+library(doFuture)
+foreach(rows_to_run, .export = c("run_simulation", "design_matrix", "required_fx", "folder", "SSD_mult_CRT")) %dofuture% {
+    run_simulation(Rows, name_results = required_fx[1], name_times = required_fx[2],
+                   design_matrix = design_matrix, results_folder = folder,
+                   seed = as.integer(required_fx[3]))
+}
+# Stop clusters
+stopCluster(cl)
+stopImplicitCluster()
+
+# Future------------------
+if (missing(nclusters)) {
+    nclusters <- detectCores() / 2
+} else {
+    nclusters <- nclusters
+}
+plan(multisession, workers = nclusters)
+rows_to_run <- 1:nrow(design_matrix)
+future_lapply(rows_to_run, function(Row)
+    run_simulation(Row = Row, 
+                   name_results = required_fx[1], 
+                   name_times = required_fx[2],
+                   design_matrix = design_matrix,
+                   results_folder = folder,
+                   seed = as.integer(required_fx[3])
+    )
+)
+    
+future_lapply(rows_to_run, run_simulation, 
+              Row = rows_to_run, 
+              name_results = required_fx[1], 
+              name_times = required_fx[2],
+              design_matrix = design_matrix,
+              results_folder = folder,
+              seed = as.integer(required_fx[3]))
