@@ -13,7 +13,7 @@
 SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICC, 
                          intersubj_between_outICC, intrasubj_between_outICC,
                          BF_thresh = 3, eta = 0.8, fixed = "n1", difference = 0.2, max,
-                         batch_size = 1000, seed, Bayes_pack) {
+                         seed, Bayes_pack) {
     # Libraries
     if (Bayes_pack == "bain") {
         if (!require("bain")) {install.packages("bain")}
@@ -48,7 +48,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     # Warnings
     if (is.numeric(c(effect_sizes, n1, n2, ndatasets, out_specific_ICC, 
                      intersubj_between_outICC, intrasubj_between_outICC, BF_thresh, 
-                     eta, max, batch_size)) == FALSE) 
+                     eta, max)) == FALSE) 
         stop("All arguments, except 'fixed', must be numeric")
     # if (n2 %% 2 > 0) stop("The number of clusters must be even")
     #if (rho < 0) stop("The intraclass correlation must be a positive value")

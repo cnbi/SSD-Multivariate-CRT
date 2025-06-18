@@ -123,6 +123,7 @@ BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, differenc
             good_result <- TRUE
             }
     }
+    print("Bayes done")
     results <- list(BF.1u = Bf1u, BF.2u = Bf2u, BF.3u = Bf3u, BF.4u = Bf4u, 
                     BF.12 = Bf12, BF.13 = Bf13, BF.14 = Bf14, 
                     BF.21 = Bf21, BF.31 = Bf31, BF.41 = Bf41,

@@ -64,9 +64,8 @@ if (!dir.exists(folder_results)) {dir.create(folder_results)}
 
 # Loop for every row
 for (Row in 1) {
-    seed <- 2106
-    run_simulation(Row, name_results = "findN2_iu_", name_times = "time_findN2_iu", 
-                          design_matrix = design_matrix_n2, results_folder = folder_results, seed)
+    run_simulation(Row, name_results = arg_fx[1], name_times = arg_fx[2], 
+                          design_matrix = design_matrix_n2, results_folder = folder, seed = 2106)
 }
 
 # Collect results
