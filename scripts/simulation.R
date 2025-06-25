@@ -134,6 +134,7 @@ if (missing(nclusters)) {
 }
 plan(multisession, workers = nclusters)
 rows_to_run <- 1:nrow(design_matrix)
+still_missing_rows <- c(21:86,137:173)
 future_lapply(rows_to_run, function(Row)
     run_simulation(Row = Row, 
                    name_results = required_fx[1], 
@@ -143,11 +144,3 @@ future_lapply(rows_to_run, function(Row)
                    seed = as.integer(required_fx[3])
     )
 )
-    
-future_lapply(rows_to_run, run_simulation, 
-              Row = rows_to_run, 
-              name_results = required_fx[1], 
-              name_times = required_fx[2],
-              design_matrix = design_matrix,
-              results_folder = folder,
-              seed = as.integer(required_fx[3]))
