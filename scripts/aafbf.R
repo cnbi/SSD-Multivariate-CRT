@@ -65,7 +65,7 @@ calc_aafbf <- function(type, estimates, sigma, b, n_eff, outcome_type) {
 # estimates: Vector numeric with the estimates
 # sigma: Matrix with the variances and covariances
 
-BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, difference){
+BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, difference, test){
     name_parameters <- unique(stringr::str_extract_all(hypothesis, "\\b[[:alnum:]_]+\\b")[[1]])
     estimates <- estimates[names(estimates) %in% name_parameters]
     good_result <- FALSE
@@ -82,23 +82,30 @@ BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, differenc
             Bf <- bain(estimates, hypothesis, n = effective_n, Sigma = sigma)
             Bf1u <- Bf$fit$Fit[1] / Bf$fit$Com[1]
             Bf2u <- Bf$fit$Fit[2] / Bf$fit$Com[2]
-            Bf3u <- Bf$fit$Fit[3] / Bf$fit$Com[3]
-            Bf4u <- Bf$fit$Fit[4] / Bf$fit$Com[4]
             Bf12 <- Bf1u / Bf2u
-            Bf13 <- Bf1u / Bf3u
-            Bf14 <- Bf1u / Bf4u
             Bf21 <- Bf2u / Bf1u
-            Bf31 <- Bf3u / Bf1u
-            Bf41 <- Bf4u / Bf1u
             Bf1c <- Bf$fit$BF.c[1]
             Bf2c <- Bf$fit$BF.c[2]
-            Bf3c <- Bf$fit$BF.c[3]
-            Bf4c <- Bf$fit$BF.c[4]
-            Bf_1c <- (Bf$fit$Fit[1] / Bf$fit$Com[1]) / (Bf$fit$Fit[3]/Bf$fit$Com[3])
             PMP1c <- Bf$fit$PMPc[1]
             PMP2c <- Bf$fit$PMPc[2]
-            PMP3c <- Bf$fit$PMPc[3]
-            PMP4c <- Bf$fit$PMPc[4]
+            
+            if (test == "intersection-union") {
+                Bf3u <- Bf$fit$Fit[3] / Bf$fit$Com[3]
+                Bf4u <- Bf$fit$Fit[4] / Bf$fit$Com[4]
+                Bf13 <- Bf1u / Bf3u
+                Bf14 <- Bf1u / Bf4u
+                Bf31 <- Bf3u / Bf1u
+                Bf41 <- Bf4u / Bf1u
+                Bf1c <- Bf$fit$BF.c[1]
+                Bf3c <- Bf$fit$BF.c[3]
+                Bf4c <- Bf$fit$BF.c[4]
+                PMP3c <- Bf$fit$PMPc[3]
+                PMP4c <- Bf$fit$PMPc[4]
+            } else if (test == "omnibus") {
+                Bf3u <- Bf$fit$Fit[3] / Bf$fit$Com[3]
+                
+            }
+            
         } else {
             # Using my own code
             # # Complexities
@@ -113,21 +120,42 @@ BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, differenc
             # 
             # # Calculataion of PMPs
         }
-        if (any(is.na(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf4u, Bf13, Bf14, Bf31, Bf41)))) {
-            good_result <- FALSE
-        } else if (any(is.nan(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf4u, Bf13, Bf14, Bf31, Bf41)))) {
-            good_result <- FALSE
-        } else if (any(is.null(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf4u, Bf13, Bf14, Bf31, Bf41)))) {
-            good_result <- FALSE
-        } else {
-            good_result <- TRUE
+        if (test == "intersection-union") {
+            
+            if (any(is.na(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf4u, Bf13, Bf14, Bf31, Bf41)))) {
+                good_result <- FALSE
+            } else if (any(is.nan(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf4u, Bf13, Bf14, Bf31, Bf41)))) {
+                good_result <- FALSE
+            } else if (any(is.null(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf4u, Bf13, Bf14, Bf31, Bf41)))) {
+                good_result <- FALSE 
+            } else {
+                good_result <- TRUE
             }
+        } else if (test == "homogeneity"){
+            if (any(is.na(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21)))) {
+                good_result <- FALSE
+            } else if (any(is.nan(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21)))) {
+                good_result <- FALSE
+            } else if (any(is.null(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21)))) {
+                good_result <- FALSE 
+            } else {
+                good_result <- TRUE
+            }
+        }
     }
-    print("Bayes done")
-    results <- list(BF.1u = Bf1u, BF.2u = Bf2u, BF.3u = Bf3u, BF.4u = Bf4u, 
-                    BF.12 = Bf12, BF.13 = Bf13, BF.14 = Bf14, 
-                    BF.21 = Bf21, BF.31 = Bf31, BF.41 = Bf41,
-                    BF.1c = Bf1c, BF.2c = Bf2c, BF.3c = Bf3c, BF.4c = Bf4c,
-                    PMP.1c = PMP1c, PMP.2c = PMP2c, PMP.3c = PMP3c, PMP.4c = PMP4c)
+
+    if (test == "intersection-union") {
+        results <- list(BF.1u = Bf1u, BF.2u = Bf2u, BF.3u = Bf3u, BF.4u = Bf4u, 
+                        BF.12 = Bf12, BF.13 = Bf13, BF.14 = Bf14, 
+                        BF.21 = Bf21, BF.31 = Bf31, BF.41 = Bf41,
+                        BF.1c = Bf1c, BF.2c = Bf2c, BF.3c = Bf3c, BF.4c = Bf4c,
+                        PMP.1c = PMP1c, PMP.2c = PMP2c, PMP.3c = PMP3c, PMP.4c = PMP4c)
+    } else if (test == "homogeneity") {
+        results <- list(BF.1u = Bf1u, BF.2u = Bf2u,
+                        BF.12 = Bf12, BF.21 = Bf21,
+                        BF.1c = Bf1c, BF.2c = Bf2c,
+                        PMP.1c = PMP1c, PMP.2c = PMP2c)
+    }
+
     return(results)
 }
