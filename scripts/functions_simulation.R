@@ -7,19 +7,19 @@
 run_simulation <- function(Row, name_results, name_times, design_matrix, results_folder, seed){
     # Start time
     start_time <- Sys.time()
-
+    
     # Actual simulation
     ssd_results <- SSD_mult_CRT(test = design_matrix[Row, "test"], 
-                                  effect_sizes = c(design_matrix[Row, "eff_size1"], design_matrix[Row, "eff_size2"]), 
-                                  n1 = design_matrix[Row, "n1"],
-                                  n2 = design_matrix[Row, "n2"], 
-                                  ndatasets = 200,
-                                  out_specific_ICC = design_matrix[Row, "out_specific_ICC"], 
-                                  intersubj_between_outICC = design_matrix[Row, "intersubj_between_outICC"], 
-                                  intrasubj_between_outICC = design_matrix[Row, "intrasubj_between_outICC"],
-                                  BF_thresh = design_matrix[Row, "BF_thresh"], eta = 0.8, 
-                                  fixed = as.character(design_matrix[Row, "fixed"]), max = 500, 
-                                  Bayes_pack = as.character(design_matrix[Row, "Bayes_pack"]),
+                                effect_sizes = c(design_matrix[Row, "eff_size1"], design_matrix[Row, "eff_size2"]), 
+                                n1 = design_matrix[Row, "n1"],
+                                n2 = design_matrix[Row, "n2"], 
+                                ndatasets = 200,
+                                out_specific_ICC = design_matrix[Row, "out_specific_ICC"], 
+                                intersubj_between_outICC = design_matrix[Row, "intersubj_between_outICC"], 
+                                intrasubj_between_outICC = design_matrix[Row, "intrasubj_between_outICC"],
+                                BF_thresh = design_matrix[Row, "BF_thresh"], eta = 0.8, 
+                                fixed = as.character(design_matrix[Row, "fixed"]), max = 500, 
+                                Bayes_pack = as.character(design_matrix[Row, "Bayes_pack"]),
                                 seed = seed)
     
     # Save results
@@ -43,7 +43,7 @@ run_simulation <- function(Row, name_results, name_times, design_matrix, results
 
 # Simulation parallelised
 #required_fx: Vector with the objects and functions required to run the simulation.
- ## It includes name_results, name_times, seed, function needed.
+## It includes name_results, name_times, seed, function needed.
 
 simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
                                     required_fx){
@@ -86,7 +86,7 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
         } else {
             ncluster <- nclusters
         }
-       
+        
         # Create clusters and register them
         cl <- makeCluster(ncluster)
         registerDoParallel(cl)
@@ -122,9 +122,9 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
     
 }
 
-# Collect results
-# Collect results in a matrix---
-collect_results <- function(design_matrix, results_folder, finding, pair, name_results) {
+
+# Collect results in a matrix---------------------------------------------
+collect_results <- function(design_matrix, results_folder, finding, pair, name_results, test) {
     rows <-  seq(nrow(design_matrix))
     if (finding == "N2") {
         results_name <- ifelse(missing(name_results), "/ResultsN2Row", paste0("/", name_results))
@@ -134,9 +134,50 @@ collect_results <- function(design_matrix, results_folder, finding, pair, name_r
         file_name <- "final_results_findN1"
     }
     
-    new_matrix <- matrix(NA, ncol = 6, nrow = nrow(design_matrix))
-    for (row_design in rows) {
-        stored_result <- readRDS(paste0(results_folder, results_name, row_design, ".RDS"))
+    if (test == "intersection-union") {
+        new_matrix <- matrix(NA, ncol = 18, nrow = nrow(design_matrix))
+        # extract results
+        for (row_design in rows) {
+            stored_result <- readRDS(paste0(results_folder, results_name, row_design, ".RDS"))
+            n2 <- stored_result$n2
+            n1 <- stored_result$n1
+            median.BF12 <- median(stored_result[[11]]$results_H1[, "BF.12"])
+            median.BF13 <- median(stored_result[[11]]$results_H1[, "BF.13"])
+            median.BF14 <- median(stored_result[[11]]$results_H1[, "BF.14"])
+            median.BF1c <- median(stored_result[[11]]$results_H1[, "BF.1c"])
+            median.BF21 <- median(stored_result[[11]]$results_H2[, "BF.21"])
+            median.BF2c <- median(stored_result[[11]]$results_H2[, "BF.2c"])
+            median.BF31 <- median(stored_result[[11]]$results_H3[, "BF.31"])
+            median.BF3c <- median(stored_result[[11]]$results_H3[, "BF.3c"])
+            median.BF41 <- median(stored_result[[11]]$results_H4[, "BF.41"])
+            median.BF4c <- median(stored_result[[11]]$results_H4[, "BF.4c"])
+            eta.BF12 <- stored_result$Proportion.BF12
+            eta.BF13 <- stored_result$Proportion.BF13
+            eta.BF14 <- stored_result$Proportion.BF14
+            eta.BF21 <- stored_result$Proportion.BF21
+            eta.BF31 <- stored_result$Proportion.BF31
+            eta.BF41 <- stored_result$Proportion.BF41
+            new_matrix[row_design, ] <- c(median.BF12,
+                                          median.BF13,
+                                          median.BF14,
+                                          median.BF1c, median.BF21, median.BF2c,
+                                          median.BF31, median.BF3c, median.BF41,
+                                          median.BF4c, eta.BF12, eta.BF13,
+                                          eta.BF14, eta.BF21, eta.BF31, eta.BF41,
+                                          n2, n1)
+        }
+        # create final data frame
+        new_matrix <- as.data.frame(cbind(design_matrix, new_matrix))
+        colnames(new_matrix) <- c(names(design_matrix), "median.BF12",
+                                  "median.BF13", "median.BF14", "median.BF21",
+                                  "median.BF2c", "median.BF31", "median.BF3c",
+                                  "median.BF41", "median.BF4c", "eta.BF12",
+                                  "eta.BF13", "eta.BF14", "eta.BF21", "eta.BF31",
+                                  "eta.BF41", "n2.final", "n1.final")
+        
+    } else if (test == "homogeneity") {
+        
+    } else if (test == "omnibus") {
         median.BF1c <- median(stored_result[[6]][, "BF.1c"])
         median.BF1u <- median(stored_result[[6]][, "BF.1u"])
         mean.PMP1c <- mean(stored_result[[6]][, "PMP.1c"])
@@ -148,12 +189,8 @@ collect_results <- function(design_matrix, results_folder, finding, pair, name_r
                                       n2, n1)
     }
     
-    new_matrix <- as.data.frame(cbind(design_matrix, new_matrix))
-    colnames(new_matrix) <- c(names(design_matrix), "median.BF1c",
-                              "median.BF1c", "mean.PMP1c",
-                              "eta.BF1c", "n2.final", "n1.final")
+    # save results and return
     saveRDS(new_matrix, file = file.path(results_folder, paste0(file_name, ".RDS")))
-    
     return(new_matrix)
 }
 
