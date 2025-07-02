@@ -145,3 +145,10 @@ future_lapply(rows_to_run, function(Row)
                    seed = as.integer(required_fx[3])
     )
 )
+
+## Collect results ----------------------------------------------------
+
+collect_results(design_matrix = design_matrix_n2, results_folder = folder_results, finding = "N2", 
+                name_results = "FindN2_IU_", test = "intersection-union")
+index_missingBF <- which(is.na(final_results_findN2$median.BF1c))
+missing_BF <- final_results_findN2[which(is.na(final_results_findN2$median.BF1c)), ]
