@@ -63,7 +63,7 @@ folder_results <- "srcipts/findN2_iu"
 if (!dir.exists(folder_results)) {dir.create(folder_results)}
 
 # Loop for every row
-for (Row in 1) {
+for (Row in 81) {
     run_simulation(Row, name_results = arg_fx[1], name_times = arg_fx[2], 
                           design_matrix = design_matrix_n2, results_folder = folder, seed = 2106)
 }
@@ -74,9 +74,10 @@ collect_results(design_matrix = design_matrix_n2, results_folder = folder_result
 index_missingBF <- which(is.na(final_results_findN2$median.BF1c))
 missing_BF <- final_results_findN2[which(is.na(final_results_findN2$median.BF1c)), ]
 # Loop for every row
-for (Row in index_missingBF) {
+for (Row in 81) {
     seed <- 2106
-    run_simulation(Row, name_results = "findN2_iu_", name_times = "time_findN2_iu", 
+    options(error = recover)
+    run_simulation(Row, name_results = "FindN2_IU_", name_times = "TimeN2_IU", 
                    design_matrix = design_matrix_n2, results_folder = folder_results, seed)
 }
 

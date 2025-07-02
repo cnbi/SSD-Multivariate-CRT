@@ -47,9 +47,10 @@ print_results_multiv <- function(object_result, test, list_hypo) {
     cat(row, "\n")
 
     if (test == "intersection-union") {    # Print intersection-union
-        cat("Sample Size Determination for Intersection-Union Test")
+        cat("Sample Size Determination for Intersection-Union Test","\n")
         print_hypotheses(list_hypo)
-        
+        row <- paste(rep("-", nchar(title)), collapse = "")
+        cat(row, "\n")
         # Create dataframe with results
         results_df <- data.frame("h" = character(),
                                  "P_BF1i" = numeric(),
@@ -59,7 +60,7 @@ print_results_multiv <- function(object_result, test, list_hypo) {
                                paste("P(BF.1i >", object_result$BF_thres,"| H1)"),
                                paste("P(BF.i1 >", object_result$BF_thres,"| Hi)"))
         for (h in 2:length(list_hypo)) {
-            results_df[(h - 1), 1] <- c("i = ", h)
+            results_df[(h - 1), 1] <- paste0("i = ", h)
         }
         
         results_df[1, 2] <- object_result$Proportion.BF12 #BF_12
@@ -76,7 +77,7 @@ print_results_multiv <- function(object_result, test, list_hypo) {
         cat("***********************************************************************", "\n")
     
         } else if (test == "homogeneity") {    # Print homogeneity of effect size
-        cat("Sample Size Determination for Homogeneity of Effect Sizes Test")
+        cat("Sample Size Determination for Homogeneity of Effect Sizes Test", "\n")
         print_hypotheses(list_hypo)
         cat("Cluster size = ", object_result$n1, "\n")
         cat("Number of clusters = ", object_result$n2, "\n")
