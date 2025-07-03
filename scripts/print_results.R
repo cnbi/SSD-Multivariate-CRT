@@ -77,7 +77,7 @@ print_results_multiv <- function(object_result, test, list_hypo) {
         # Print results
         cat("Number of clusters: ", object_result$n2, "\n")
         cat("Cluster size: ", object_result$n1, "\n")
-        stargazer(results_df, type = "text", summary = FALSE)
+        stargazer::stargazer(results_df, type = "text", summary = FALSE)
         # Print eta
         cat("\n", paste(c("\u03B7 = ", object_result$eta)), "\n")
         cat("***********************************************************************", "\n")
@@ -105,7 +105,7 @@ print_results_multiv <- function(object_result, test, list_hypo) {
         # Print results
         cat("Number of clusters = ", object_result$n2, "\n")
         cat("Cluster size = ", object_result$n1, "\n")
-        stargazer(results_df, type = "text", summary = FALSE)
+        stargazer::stargazer(results_df, type = "text", summary = FALSE)
         # Print eta
         cat("\n", paste(c("\u03B7 = ", object_result$eta)), "\n")
         cat("***********************************************************************", "\n")
