@@ -41,16 +41,20 @@ print_results <- function(object_result) {
 
 # Print SSD multivariate CRT---------------------------------------------------
 print_results_multiv <- function(object_result, test, list_hypo) {
-    title <- "Final sample size"
-    cat(paste("\n", title, "\n", sep = ""))
-    row <- paste(rep("=", nchar(title)), collapse = "")
-    cat(row, "\n")
+    # title <- "Final sample size"
+    # cat(paste("\n", title, "\n", sep = ""))
+    # row <- paste(rep("=", nchar(title)), collapse = "")
+    # cat(row, "\n")
 
     if (test == "intersection-union") {    # Print intersection-union
-        cat("Sample Size Determination for Intersection-Union Test","\n")
-        print_hypotheses(list_hypo)
+        title <- "Sample Size Determination for Intersection-Union Test"
+        header <- paste(rep("*", nchar(title)), collapse = "")
+        cat(header, "\n")
+        cat(title,"\n")
         row <- paste(rep("-", nchar(title)), collapse = "")
         cat(row, "\n")
+        print_hypotheses(list_hypo)
+        
         # Create dataframe with results
         results_df <- data.frame("h" = character(),
                                  "P_BF1i" = numeric(),
@@ -71,16 +75,21 @@ print_results_multiv <- function(object_result, test, list_hypo) {
         results_df[3, 3] <- object_result$Proportion.BF41 #BF_41
         
         # Print results
-        print(results_df)
+        cat("Number of clusters: ", object_result$n2, "\n")
+        cat("Cluster size: ", object_result$n1, "\n")
+        stargazer(results_df, type = "text", summary = FALSE)
         # Print eta
-        cat(paste(c("\u03B7 = ", object_result$eta)), "\n")
+        cat("\n", paste(c("\u03B7 = ", object_result$eta)), "\n")
         cat("***********************************************************************", "\n")
     
         } else if (test == "homogeneity") {    # Print homogeneity of effect size
-        cat("Sample Size Determination for Homogeneity of Effect Sizes Test", "\n")
+        title <- "Sample Size Determination for Homogeneity of Effect Sizes Test"
+        header <- paste(rep("*", nchar(title)), collapse = "")
+        cat(header, "\n")
+        cat(title, "\n")
+        row <- paste(rep("-", nchar(title)), collapse = "")
+        cat(row, "\n")
         print_hypotheses(list_hypo)
-        cat("Cluster size = ", object_result$n1, "\n")
-        cat("Number of clusters = ", object_result$n2, "\n")
         
         # Create dataframe with results
         results_df <- data.frame("h" = character(),
@@ -94,9 +103,11 @@ print_results_multiv <- function(object_result, test, list_hypo) {
         results_df[1, 3] <- object_result$Proportion.BF21 #BF_21
         
         # Print results
-        print(results_df)
+        cat("Number of clusters = ", object_result$n2, "\n")
+        cat("Cluster size = ", object_result$n1, "\n")
+        stargazer(results_df, type = "text", summary = FALSE)
         # Print eta
-        cat(paste(c("\u03B7 = ", object_result$eta)), "\n")
+        cat("\n", paste(c("\u03B7 = ", object_result$eta)), "\n")
         cat("***********************************************************************", "\n")
         
     } else {                                    # Print for null vs informative

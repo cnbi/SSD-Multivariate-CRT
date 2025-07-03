@@ -35,6 +35,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     if (!requireNamespace("mvtnorm", quietly = TRUE)) {
         install.packages("mvtnorm")
     }
+    if (!requireNamespace("stargazer", quietly = TRUE)) {
+        install.packages("stargazer")
+    } # Format table of output
     
     # Functions
     source("scripts/multiv_data_generation.R")
@@ -453,7 +456,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                          results_H2 = results_H2))
     }
     
-    # Final output
+    # Final output ------
     if (test == "intersection-union") {
         print_results_multiv(SSD_object, test, list(H1, H2, H3, H4))
     } else if (test == "homogeneity") {
