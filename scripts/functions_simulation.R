@@ -169,7 +169,8 @@ collect_results <- function(design_matrix, results_folder, finding, pair, name_r
         # create final data frame
         new_matrix <- as.data.frame(cbind(design_matrix, new_matrix))
         colnames(new_matrix) <- c(names(design_matrix), "median.BF12",
-                                  "median.BF13", "median.BF14", "median.BF21",
+                                  "median.BF13", "median.BF14", "median.BF1c",
+                                  "median.BF21",
                                   "median.BF2c", "median.BF31", "median.BF3c",
                                   "median.BF41", "median.BF4c", "eta.BF12",
                                   "eta.BF13", "eta.BF14", "eta.BF21", "eta.BF31",

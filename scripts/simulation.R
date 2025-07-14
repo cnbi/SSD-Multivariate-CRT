@@ -9,7 +9,8 @@ intersubj_icc <- c(0.005, 0.025)
 intrasubj_icc <- c(0.2, 0.5)
 bf_thresh <- c(5, 10)
 eta <- c(0.8)
-# test
+
+# Test-specific factors
 test <- c("intersection-union")
 effect_sizes <- matrix(NA, nrow = 6, ncol = 2)
 i <- 1
@@ -29,6 +30,7 @@ if (test == "intersection-union") {
     }
 }
 bf_pack <- c("bain")
+
 # Finding number of clusters
 n1 <- c(5, 15, 30)
 n2 <- 30
@@ -150,5 +152,7 @@ future_lapply(rows_to_run, function(Row)
 
 collect_results(design_matrix = design_matrix_n2, results_folder = folder_results, finding = "N2", 
                 name_results = "FindN2_IU_", test = "intersection-union")
-index_missingBF <- which(is.na(final_results_findN2$median.BF1c))
-missing_BF <- final_results_findN2[which(is.na(final_results_findN2$median.BF1c)), ]
+
+## Explore results --------------------------------------------------------------
+# Intersection-union test
+

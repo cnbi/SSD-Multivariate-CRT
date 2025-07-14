@@ -1,6 +1,7 @@
 ################ PLOTS ###########################
 
-#my_colour: 
+#my_colour: Colour for filling in density shade
+
 density_plot <- function(data, BF_thresh, save = FALSE, x_axis, limit, my_colour) {
     
     # Libraries
