@@ -79,17 +79,20 @@ BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, test, dif
             PMP <- Bf$BFtable_confirmatory[1, 8]
         } else if (pack == "bain") {
             # Using bain
-            Bf <- bain(estimates, hypothesis, n = effective_n, Sigma = sigma)
+            Bf <- bain::bain(estimates, hypothesis, n = effective_n, Sigma = sigma)
+            browser()
             Bf1u <- Bf$fit$Fit[1] / Bf$fit$Com[1]
-            Bf2u <- Bf$fit$Fit[2] / Bf$fit$Com[2]
-            Bf12 <- Bf1u / Bf2u
-            Bf21 <- Bf2u / Bf1u
             Bf1c <- Bf$fit$BF.c[1]
-            Bf2c <- Bf$fit$BF.c[2]
             PMP1c <- Bf$fit$PMPc[1]
-            PMP2c <- Bf$fit$PMPc[2]
+            Bfc1
+            PMPc1
             
             if (test == "intersection-union") {
+                Bf2u <- Bf$fit$Fit[2] / Bf$fit$Com[2]
+                Bf12 <- Bf1u / Bf2u
+                Bf21 <- Bf2u / Bf1u
+                Bf2c <- Bf$fit$BF.c[2]
+                PMP2c <- Bf$fit$PMPc[2]
                 Bf3u <- Bf$fit$Fit[3] / Bf$fit$Com[3]
                 Bf4u <- Bf$fit$Fit[4] / Bf$fit$Com[4]
                 Bf13 <- Bf1u / Bf3u
