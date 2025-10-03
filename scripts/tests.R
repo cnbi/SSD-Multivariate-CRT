@@ -215,3 +215,13 @@ a <- SSD_mult_CRT("homogeneity", effect_sizes = c(0.5, 0.3),
                   intersubj_between_outICC = 0.022, intrasubj_between_outICC = 0.5,
                   BF_thresh = 5, eta = 0.8, fixed = "n1", difference = 0.2,
                   max = 300, batch_size = 100, seed = 1855, Bayes_pack = "bain")
+
+
+# Data generation ---------------------------------------------------------------
+source("multiv_data_generation.R")
+source("helpers_functions.R")
+
+options(error = recover)
+a <- gen_multiv_data(30, 5, n2 = 16, c(0.3, 0.8), out_specific_ICC = 0.2,
+                 intersubj_between_outICC = 0.022, intrasubj_between_outICC = 0.5,
+                 n_outcomes = 2, seed = 40)
