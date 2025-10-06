@@ -11,9 +11,9 @@
 # TODO: The following code only works for n_outcomes =  2
 
 gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, intersubj_between_outICC, 
-                            intrasubj_between_outICC, n_outcomes, seed){
+                            intrasubj_between_outICC, n_outcomes, master.seed){
     
-    set.seed(seed)
+    set.seed(master.seed)
     marginal_variances <- runif(n_outcomes, 10, 50)
     
     # Calculate the variance components
@@ -66,8 +66,8 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, i
     
     # Random effects
     for (iteration in seq(ndatasets)) {
-        seeds[iteration] <- (iteration + seed) * iteration
-        print(seeds[iteration])
+        seeds[iteration] <- iteration + master.seed
+        print(seeds[iteration]) #Delete!
         set.seed(seeds[iteration])
         e <- MASS::mvrnorm(n1 * n2, rep(0, n_outcomes), sigma_e)
         u0 <- MASS::mvrnorm(n2, rep(0, n_outcomes), sigma_u0)
