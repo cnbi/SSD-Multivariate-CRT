@@ -20,7 +20,7 @@ run_simulation <- function(Row, name_results, name_times, design_matrix, results
                                 pmp_thresh = design_matrix[Row, "pmp_thresh"], eta = design_matrix[Row, "eta"], 
                                 fixed = as.character(design_matrix[Row, "fixed"]), max = 500, 
                                 Bayes_pack = as.character(design_matrix[Row, "Bayes_pack"]),
-                                master.seed = seed)
+                                master.seed = as.integer(seed))
     
     # Save results
     end_time <- Sys.time()
@@ -115,7 +115,7 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
         rows_to_run <- 1:nrow_design
         future_lapply(rows_to_run, function(Row){
             run_simulation(Row, name_results = required_fx[1], name_times = required_fx[2],
-                           design_matrix = design_matrix, results_folder = folder, seed = required_fx[3])
+                           design_matrix = design_matrix, results_folder = folder, seed = as.integer(required_fx[3]))
         })
         
     }
