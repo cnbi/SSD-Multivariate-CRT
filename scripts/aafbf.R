@@ -65,48 +65,49 @@ calc_aafbf <- function(type, estimates, sigma, b, n_eff, outcome_type) {
 # estimates: Vector numeric with the estimates
 # sigma: Matrix with the variances and covariances
 
-BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, test, difference){
-    name_parameters <- unique(stringr::str_extract_all(hypothesis, "\\b[[:alnum:]_]+\\b")[[1]])
-    estimates <- estimates[names(estimates) %in% name_parameters]
+BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, difference){
+    #name_parameters <- unique(stringr::str_extract_all(hypotheses, "\\b[[:alnum:]_]+\\b")[[1]])
+    name_parameters <- c("Treatment1", "Treatment2")
+    estimates <- estimates[name_parameters]
     good_result <- FALSE
     while (good_result == FALSE) {
         if (pack == "BFpack") {
             # Using BFpack
-            Bf <- BF(estimates, Sigma = sigma, n = effective_n, hypothesis = hypothesis)
+            Bf <- BF(estimates, Sigma = sigma, n = effective_n, hypotheses = hypotheses)
             Bf1u <- Bf$BFtable_confirmatory[1, 6]
             Bf1c <- Bf$BFmatrix_confirmatory[1, 2]
             Bf_1c <- Bf$BFtable_confirmatory[1, 6] / Bf$BFtable_confirmatory[2, 6]
             PMP <- Bf$BFtable_confirmatory[1, 8]
         } else if (pack == "bain") {
             # Using bain
-            Bf <- bain::bain(estimates, hypothesis, n = effective_n, Sigma = sigma)
-            browser()
+            Bf <- bain::bain(estimates, hypotheses, n = effective_n, Sigma = sigma)
             Bf1u <- Bf$fit$Fit[1] / Bf$fit$Com[1]
             Bf1c <- Bf$fit$BF.c[1]
             PMP1c <- Bf$fit$PMPc[1]
-            Bfc1
-            PMPc1
+            
             
             if (test == "intersection-union") {
+                Bfcu <- Bf$fit$Fit[5] / Bf$fit$Com[5] 
+                Bfc1 <- 1/Bf$fit$BF.c[1] #1/BF1c
+                PMPc <- Bf$fit$PMPc[5]
                 Bf2u <- Bf$fit$Fit[2] / Bf$fit$Com[2]
                 Bf12 <- Bf1u / Bf2u
                 Bf21 <- Bf2u / Bf1u
                 Bf2c <- Bf$fit$BF.c[2]
                 PMP2c <- Bf$fit$PMPc[2]
                 Bf3u <- Bf$fit$Fit[3] / Bf$fit$Com[3]
-                Bf4u <- Bf$fit$Fit[4] / Bf$fit$Com[4]
                 Bf13 <- Bf1u / Bf3u
-                Bf14 <- Bf1u / Bf4u
                 Bf31 <- Bf3u / Bf1u
-                Bf41 <- Bf4u / Bf1u
-                Bf1c <- Bf$fit$BF.c[1]
                 Bf3c <- Bf$fit$BF.c[3]
-                Bf4c <- Bf$fit$BF.c[4]
                 PMP3c <- Bf$fit$PMPc[3]
-                PMP4c <- Bf$fit$PMPc[4]
+
             } else if (test == "omnibus") {
                 Bf3u <- Bf$fit$Fit[3] / Bf$fit$Com[3]
                 
+            } else if (test == "homogeneity") {
+                Bfcu <- Bf$fit$Fit[3] / Bf$fit$Com[3]
+                Bfc1 <- Bfcu / Bf1u
+                PMPc <- Bf$fit$PMPc[3]
             }
             
         } else {
@@ -125,16 +126,16 @@ BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, test, dif
         }
         if (test == "intersection-union") {
             
-            if (any(is.na(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf4u, Bf13, Bf14, Bf31, Bf41)))) {
+            if (any(is.na(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf13, Bf31)))) {
                 good_result <- FALSE
-            } else if (any(is.nan(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf4u, Bf13, Bf14, Bf31, Bf41)))) {
+            } else if (any(is.nan(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf13, Bf31)))) {
                 good_result <- FALSE
-            } else if (any(is.null(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf4u, Bf13, Bf14, Bf31, Bf41)))) {
+            } else if (any(is.null(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf13, Bf31)))) {
                 good_result <- FALSE 
             } else {
                 good_result <- TRUE
             }
-        } else if (test == "homogeneity"){
+        } else if (test == "homogeneity") {
             if (any(is.na(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21)))) {
                 good_result <- FALSE
             } else if (any(is.nan(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21)))) {
@@ -148,11 +149,11 @@ BF_multiv <- function(estimates, sigma, effective_n, hypothesis, pack, test, dif
     }
 
     if (test == "intersection-union") {
-        results <- list(BF.1u = Bf1u, BF.2u = Bf2u, BF.3u = Bf3u, BF.4u = Bf4u, 
-                        BF.12 = Bf12, BF.13 = Bf13, BF.14 = Bf14, 
-                        BF.21 = Bf21, BF.31 = Bf31, BF.41 = Bf41,
-                        BF.1c = Bf1c, BF.2c = Bf2c, BF.3c = Bf3c, BF.4c = Bf4c,
-                        PMP.1c = PMP1c, PMP.2c = PMP2c, PMP.3c = PMP3c, PMP.4c = PMP4c)
+        results <- list(BF.1u = Bf1u, BF.2u = Bf2u, BF.3u = Bf3u, Bfcu,
+                        BF.12 = Bf12, BF.13 = Bf13, 
+                        BF.21 = Bf21, BF.31 = Bf31, BF.c1 = Bfc1,
+                        BF.1c = Bf1c, BF.2c = Bf2c, BF.3c = Bf3c,
+                        PMP.1c = PMP1c, PMP.2c = PMP2c, PMP.3c = PMP3c, PMP.c = PMPc)
     } else if (test == "homogeneity") {
         results <- list(BF.1u = Bf1u, BF.2u = Bf2u,
                         BF.12 = Bf12, BF.21 = Bf21,

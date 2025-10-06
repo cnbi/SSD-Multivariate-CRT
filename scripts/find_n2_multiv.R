@@ -12,7 +12,7 @@
 
 SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICC, 
                          intersubj_between_outICC, intrasubj_between_outICC,
-                         BF_thresh = 3, eta = 0.8, fixed = "n1", difference = 0.2, max,
+                         pmp_thresh = 0.9, eta = 0.8, fixed = "n1", difference = 0.2, max,
                          seed, Bayes_pack) {
     # Libraries
     if (Bayes_pack == "bain") {
@@ -50,7 +50,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     
     # Warnings
     if (is.numeric(c(effect_sizes, n1, n2, ndatasets, out_specific_ICC, 
-                     intersubj_between_outICC, intrasubj_between_outICC, BF_thresh, 
+                     intersubj_between_outICC, intrasubj_between_outICC, pmp_thresh, 
                      eta, max)) == FALSE) 
         stop("All arguments, except 'fixed', must be numeric")
     # if (n2 %% 2 > 0) stop("The number of clusters must be even")
@@ -66,19 +66,19 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     
     # Hypotheses
     if (test == "intersection-union") {
-        H1 <- "Slope1>0 & Slope2>0"
-        H2 <- "Slope1>0 & Slope2<0"
-        H3 <- "Slope1<0 & Slope2>0"
-        H4 <- "Slope1<0 & Slope2<0"
+        H1 <- "Treatment1>0 & Treatment2>0"
+        H2 <- "Treatment1>0 & Treatment2<0"
+        H3 <- "Treatment1<0 & Treatment2>0"
+        H4 <- "Treatment1<0 & Treatment2<0"
         effect_sizesH2 <- effect_sizes * c(1, -1)
         effect_sizesH3 <- effect_sizes * c(-1, 1)
         effect_sizesH4 <- effect_sizes * c(-1, -1)
     } else if (test == "omnibus") {
-        H1 <- "Slope1>0 & Slope2>0" #Change this
-        H2 <- "Slope1>0 & Slope2<0" #Change this
+        H1 <- "Treatment1>0 & Treatment2>0" #Change this
+        H2 <- "Treatment1>0 & Treatment2<0" #Change this
     } else if (test == "homogeneity") {
-        H1 <- hypothesis_maker(c("Slope1", "Slope2"), difference, "<")
-        H2 <- hypothesis_maker(c("Slope1", "Slope2"), difference, ">")
+        H1 <- hypothesis_maker(c("Treatment1", "Treatment2"), difference, "<")
+        H2 <- hypothesis_maker(c("Treatment1", "Treatment2"), difference, ">")
         effect_sizesH2 <- c(effect_sizes[1] + difference, effect_sizes[2])
     }
     
@@ -103,8 +103,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     
     if (test == "intersection-union") {
         results_H1 <- matrix(NA, ndatasets, 5)
-        results_H2 <- matrix(NA, ndatasets, 3)
-        results_H3 <- matrix(NA, ndatasets, 3)
+        results_H2 <- matrix(NA, ndatasets, 4)
+        results_H3 <- matrix(NA, ndatasets, 4)
         results_H4 <- matrix(NA, ndatasets, 3)
     } else if (test == "homogeneity") {
         results_H1 <- matrix(NA, ndatasets, 3)
@@ -182,7 +182,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         }
         print("Effective sample size done")
         
-        #Bayes factors-----------------------------------------------------------------
+        # Bayes factors and PMPs-----------------------------------------------------------------
         
         if (test == "intersection-union") {
             output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_nH1, list(paste0(H1, ";", H2, ";", H3)), list(Bayes_pack), list(test))
@@ -203,28 +203,31 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             results_H1[, 1] <- unlist(lapply(output_BF_H1, extract_res, 1)) # Bayes factor H1vsHu
             results_H1[, 2] <- unlist(lapply(output_BF_H1, extract_res, 5)) # Bayes factor H1vsH2
             results_H1[, 3] <- unlist(lapply(output_BF_H1, extract_res, 6)) # Bayes factor H1vsH3
-            results_H1[, 4] <- unlist(lapply(output_BF_H1, extract_res, 7)) # Bayes factor H1vsH4
-            results_H1[, 5] <- unlist(lapply(output_BF_H1, extract_res, 11)) # Bayes factor H1vsHc
+            results_H1[, 4] <- unlist(lapply(output_BF_H1, extract_res, 10)) # Bayes factor H1vsHc
+            results_H1[, 5] <- unlist(lapply(output_BF_H1, extract_res, 13)) # PMP H1vsHc
+            
             #results_H1[, 6] <- unlist(lapply(output_BF_H1, extract_res, 15)) #posterior model probabilities of H1vsHc
-            colnames(results_H1) <- c("BF.1u", "BF.12", "BF.13", "BF.14", "BF.1c")
+            colnames(results_H1) <- c("BF.1u", "BF.12", "BF.13", "BF.1c", "PMP.1c")
             
             results_H2[, 1] <- unlist(lapply(output_BF_H2, extract_res, 2)) # Bayes factor H2vsHu
-            results_H2[, 2] <- unlist(lapply(output_BF_H2, extract_res, 8)) # Bayes factor H2vsH1
-            results_H2[, 3] <- unlist(lapply(output_BF_H2, extract_res, 12)) # Bayes factor H2vsHc
+            results_H2[, 2] <- unlist(lapply(output_BF_H2, extract_res, 7)) # Bayes factor H2vsH1
+            results_H2[, 3] <- unlist(lapply(output_BF_H2, extract_res, 11)) # Bayes factor H2vsHc
+            results_H2[, 4] <- unlist(lapply(output_BF_H2, extract_res, 14)) # PMP H2vsHc
             #results_H2[, 4] <- unlist(lapply(output_BF_H2, extract_res, 16)) #posterior model probabilities of H2vsHc
-            colnames(results_H2) <- c("BF.2u", "BF.21", "BF.2c")
+            colnames(results_H2) <- c("BF.2u", "BF.21", "BF.2c", "PMP.2c")
             
             results_H3[, 1] <- unlist(lapply(output_BF_H3, extract_res, 3)) # Bayes factor H3vsHu
-            results_H3[, 2] <- unlist(lapply(output_BF_H3, extract_res, 9)) # Bayes factor H3vsH1
-            results_H3[, 3] <- unlist(lapply(output_BF_H3, extract_res, 13)) # Bayes factor H3vsHc
+            results_H3[, 2] <- unlist(lapply(output_BF_H3, extract_res, 8)) # Bayes factor H3vsH1
+            results_H3[, 3] <- unlist(lapply(output_BF_H3, extract_res, 12)) # Bayes factor H3vsHc
+            results_H3[, 4] <- unlist(lapply(output_BF_H3, extract_res, 15)) # PMP H3vsHc
             #results_H3[, 4] <- unlist(lapply(output_BF_H3, extract_res, 17)) #posterior model probabilities of H3vsHc
-            colnames(results_H3) <- c("BF.3u", "BF.31", "BF.3c")
+            colnames(results_H3) <- c("BF.3u", "BF.31", "BF.3c", "PMP.3c")
             
             results_H4[, 1] <- unlist(lapply(output_BF_H4, extract_res, 4)) # Bayes factor H4vsHu
-            results_H4[, 2] <- unlist(lapply(output_BF_H4, extract_res, 10)) # Bayes factor H4vsH1
-            results_H4[, 3] <- unlist(lapply(output_BF_H4, extract_res, 14)) # Bayes factor H4vsHc
+            results_H4[, 2] <- unlist(lapply(output_BF_H4, extract_res, 9)) # Bayes factor H4vsH1
+            results_H4[, 3] <- unlist(lapply(output_BF_H4, extract_res, 16)) # PMP Hc
             #results_H4[, 4] <- unlist(lapply(output_BF_H4, extract_res, 18)) #posterior model probabilities of H4vsHc
-            colnames(results_H4) <- c("BF.4u", "BF.41", "BF.4c")
+            colnames(results_H4) <- c("BF.4u", "BF.41", "PMP.c")
             
         } else if (test == "homogeneity") {
             results_H1[, 1] <- unlist(lapply(output_BF_H1, extract_res, 1)) # Bayes factor H1vsHu
@@ -240,16 +243,14 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         }
         
         print("Bayes factor done!")
-        
         #Evaluation of condition -------------------------------------------
         # Proportion
         if (test == "intersection-union") {
-            prop_BF12 <- length(which(results_H1[, "BF.12"] > BF_thresh)) / ndatasets
-            prop_BF13 <- length(which(results_H1[, "BF.13"] > BF_thresh)) / ndatasets
-            prop_BF14 <- length(which(results_H1[, "BF.14"] > BF_thresh)) / ndatasets
-            prop_BF21 <- length(which(results_H2[, "BF.21"] > BF_thresh)) / ndatasets
-            prop_BF31 <- length(which(results_H3[, "BF.31"] > BF_thresh)) / ndatasets
-            prop_BF41 <- length(which(results_H4[, "BF.41"] > BF_thresh)) / ndatasets
+            prop_PMP1 <- length(which(results_H1[, "PMP.1c"] > pmp_thresh)) / ndatasets
+            prop_PMP2 <- length(which(results_H2[, "PMP.2c"] > pmp_thresh)) / ndatasets
+            prop_PMP3 <- length(which(results_H3[, "PMP.3c"] > pmp_thresh)) / ndatasets
+            prop_PMP4 <- length(which(results_H4[, "PMP.c"] > pmp_thresh)) / ndatasets
+            
         } else if (test == "homogeneity") {
             prop_BF12 <- length(which(results_H1[, "BF.12"] > BF_thresh)) / ndatasets
             prop_BF21 <- length(which(results_H2[, "BF.21"] > BF_thresh)) / ndatasets
@@ -257,14 +258,10 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         
         # Evaluation
         if (test == "intersection-union") {
-            condition_met <- ifelse(prop_BF12 > eta & prop_BF13 > eta & prop_BF14 > eta & prop_BF21 > eta & prop_BF31 > eta & prop_BF41 > eta, TRUE, FALSE)
+            condition_met <- ifelse(prop_PMP1 > eta & prop_PMP2 > eta & prop_PMP3 > eta & prop_PMP4 > eta, TRUE, FALSE)
             previous_eta <- current_eta
-            if (prop_BF12 < eta & prop_BF21 < eta & prop_BF31 < eta & prop_BF41 < eta) {
-                current_eta <- min(prop_BF12, prop_BF21, prop_BF31, prop_BF41, prop_BF13, prop_BF14)
-            } else if (prop_BF12 < eta | prop_BF21 < eta | prop_BF31 < eta | prop_BF41 < eta | prop_BF13 | prop_BF14) {
-                current_eta <- min(prop_BF12, prop_BF21, prop_BF31, prop_BF41, prop_BF13, prop_BF14)
-            } else if (condition_met) {
-                current_eta <- min(prop_BF12, prop_BF21, prop_BF31, prop_BF41, prop_BF13, prop_BF14)
+            if (any(c(prop_PMP1, prop_PMP2, prop_PMP3, prop_PMP4) < eta)) {
+                current_eta <- min(prop_PMP1, prop_PMP2, prop_PMP3, prop_PMP4)
             }
         } else if (test == "homogeneity") {
             #TODO: Change these
@@ -278,19 +275,17 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                 current_eta <- min(prop_BF12, prop_BF21)
             }
         }
-        print("Bayes factor check!")
+        print("Power criterion check!")
         
         # Binary search algorithm ------------------------------------------
         if (condition_met == FALSE) {
             if (test == "intersection-union") {
                 print(c("Using cluster size:", n1, 
                         "and number of clusters:", n2,
-                        "prop_BF12: ", prop_BF12,
-                        "prop_BF13: ", prop_BF13,
-                        "prop_BF14: ", prop_BF14,
-                        "prop_BF21: ", prop_BF21,
-                        "prop_BF31: ", prop_BF31,
-                        "prop_BF41: ", prop_BF41,
+                        "prop_PMP1: ", prop_PMP1,
+                        "prop_PMP2: ", prop_PMP2,
+                        "prop_PMP3: ", prop_PMP3,
+                        "prop_PMP4: ", prop_PMP4,
                         "low:", low, "high:", high))
             } else if (test == "homogeneity") {
                 print(c("Using cluster size:", n1, 
@@ -352,12 +347,10 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             if (test == "intersection-union") {
                 print(c("Using cluster size:", n1,
                         "and number of clusters:", n2,
-                        "prop_BF12: ", prop_BF12,
-                        "prop_BF13: ", prop_BF13,
-                        "prop_BF14: ", prop_BF14,
-                        "prop_BF21: ", prop_BF21,
-                        "prop_BF31: ", prop_BF31,
-                        "prop_BF41: ", prop_BF41,
+                        "prop_PMP1: ", prop_PMP1,
+                        "prop_PMP2: ", prop_PMP2,
+                        "prop_PMP3: ", prop_PMP3,
+                        "prop_PMP4: ", prop_PMP4,
                         "low: ", low, "high: ", high))
             } else if (test == "homogeneity") {
                 print(c("Using cluster size:", n1, 
@@ -430,13 +423,11 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     if (test == "intersection-union") {
         SSD_object <- list("n1" = n1,
                            "n2" = n2,
-                           "Proportion.BF12" = prop_BF12,
-                           "Proportion.BF13" = prop_BF13,
-                           "Proportion.BF14" = prop_BF14,
-                           "Proportion.BF21" = prop_BF21,
-                           "Proportion.BF31" = prop_BF31,
-                           "Proportion.BF41" = prop_BF41,
-                           "BF_thres" = BF_thresh,
+                           "Proportion.PMP1" = prop_PMP1,
+                           "Proportion.PMP2" = prop_PMP2,
+                           "Proportion.PMP3" = prop_PMP3,
+                           "Proportion.PMP4" = prop_PMP4,
+                           "pmp_thresh" = pmp_thresh,
                            "eta" = eta,
                            "data" = list(results_H1 = results_H1,
                                          results_H2 = results_H2,
@@ -464,7 +455,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
 }
 
 # Version 2-------------------------------------------------------------------
-SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICC, 
+SSD_mult_CRT2 <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICC, 
                          intersubj_between_outICC, intrasubj_between_outICC,
                          BF_thresh = 3, eta = 0.8, fixed = "n1", difference = 0.2, max,
                          seed, Bayes_pack) {
@@ -491,6 +482,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     }
     if (!requireNamespace("stargazer", quietly = TRUE)) {
         install.packages("stargazer")
+    } # Format table of output
+    if (!requireNamespace("lavaan", quietly = TRUE)) {
+        install.packages("lavaan")
     } # Format table of output
     
     # Functions
@@ -520,19 +514,19 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     
     # Hypotheses
     if (test == "intersection-union") {
-        H1 <- "Slope1>0 & Slope2>0"
-        H2 <- "Slope1>0 & Slope2<0"
-        H3 <- "Slope1<0 & Slope2>0"
-        H4 <- "Slope1<0 & Slope2<0"
+        H1 <- "Treatment1>0 & Treatment2>0"
+        H2 <- "Treatment1>0 & Treatment2<0"
+        H3 <- "Treatment1<0 & Treatment2>0"
+        H4 <- "Treatment1<0 & Treatment2<0"
         effect_sizesH2 <- effect_sizes * c(1, -1)
         effect_sizesH3 <- effect_sizes * c(-1, 1)
         effect_sizesH4 <- effect_sizes * c(-1, -1)
     } else if (test == "omnibus") {
-        H1 <- "Slope1>0 & Slope2>0" #Change this
-        H2 <- "Slope1>0 & Slope2<0" #Change this
+        H1 <- "Treatment1>0 & Treatment2>0" #Change this
+        H2 <- "Treatment1>0 & Treatment2<0" #Change this
     } else if (test == "homogeneity") {
-        H1 <- hypothesis_maker(c("Slope1", "Slope2"), difference, "<")
-        H2 <- hypothesis_maker(c("Slope1", "Slope2"), difference, ">")
+        H1 <- hypothesis_maker(c("Treatment1", "Treatment2"), difference, "<")
+        H2 <- hypothesis_maker(c("Treatment1", "Treatment2"), difference, ">")
         effect_sizesH2 <- c(effect_sizes[1] + difference, effect_sizes[2])
     }
     
@@ -565,33 +559,33 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         results_H2 <- matrix(NA, ndatasets, 3)
     }
     
-    seed <- ifelse(missing(seed), 1920, seed)
+    seed <- ifelse(missing(seed), 45, seed)
     
     
     # Data generation
     while (ultimate_sample_sizes == FALSE) {
         if (test == "intersection-union") {
             # If H1 is true
-            data_H1 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizes,
+            data_H1 <- do.call(gen_multiv_data, list(1, n1, n2, effect_sizes,
                                                      out_specific_ICC,
                                                      intersubj_between_outICC,
                                                      intrasubj_between_outICC,
                                                      n_outcomes, seed))
             
             # If H2 is true
-            data_H2 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH2, 
+            data_H2 <- do.call(gen_multiv_data, list(1, n1, n2, effect_sizesH2, 
                                                      out_specific_ICC, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
                                                      n_outcomes, seed))
             
-            data_H3 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH3, 
+            data_H3 <- do.call(gen_multiv_data, list(1, n1, n2, effect_sizesH3, 
                                                      out_specific_ICC, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
                                                      n_outcomes, seed))
             
-            data_H4 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH4, 
+            data_H4 <- do.call(gen_multiv_data, list(1, n1, n2, effect_sizesH4, 
                                                      out_specific_ICC, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
@@ -614,17 +608,19 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         }
         
         # Sample from distribution
+        set.seed(010)
         if (test == "intersection-union") {
+            data_H1_df <- mvrnorm(5000, mu = data_H1$estimations[[1]][3:4], Sigma = data_H1$Sigma[[1]], empirical = TRUE)
+            data_H2_df <- mvrnorm(5000, mu = data_H2$estimations[[1]][3:4], Sigma = data_H2$Sigma[[1]], empirical = TRUE)
+            data_H3_df <- mvrnorm(5000, mu = data_H3$estimations[[1]][3:4], Sigma = data_H3$Sigma[[1]], empirical = TRUE)
+            data_H4_df <- mvrnorm(5000, mu = data_H4$estimations[[1]][3:4], Sigma = data_H4$Sigma[[1]], empirical = TRUE)
+        } else if (test == "omnibus") {
             data_H1_df <- mvrnorm(5000, mu = data_H1$estimations, Sigma = data_H1$Sigma, empirical = TRUE)
             data_H2_df <- mvrnorm(5000, mu = data_H2$estimations, Sigma = data_H2$Sigma, empirical = TRUE)
-            data_H3_df <- mvrnorm(5000, mu = data_H3$estimations, Sigma = data_H3$Sigma, empirical = TRUE)
-            data_H4_df <- mvrnorm(5000, mu = data_H4$estimations, Sigma = data_H4$Sigma, empirical = TRUE)
-        } if (test == "omnibus"){
-            
         } else if (test == "homogeneity") {
-            
+            data_H1_df <- mvrnorm(5000, mu = data_H1$estimations, Sigma = data_H1$Sigma, empirical = TRUE)
+            data_H2_df <- mvrnorm(5000, mu = data_H2$estimations, Sigma = data_H2$Sigma, empirical = TRUE)
         }
-        
         
         # Effective sample size
         if (test == "intersection-union") {
@@ -652,10 +648,10 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         #Bayes factors-----------------------------------------------------------------
         
         if (test == "intersection-union") {
-            output_BF_H1 <- BF_multiv(data_H1$estimations, data_H1$Sigma, effective_nH1, paste0(H1, ";", H2, ";", H3), Bayes_pack, test)
-            output_BF_H2 <- BF_multiv(data_H2$estimations, data_H2$Sigma, effective_nH2, paste0(H1, ";", H2, ";", H3), Bayes_pack, test)
-            output_BF_H3 <- BF_multiv(data_H3$estimations, data_H3$Sigma, effective_nH3, paste0(H1, ";", H2, ";", H3), Bayes_pack, test)
-            output_BF_H4 <- BF_multiv(data_H4$estimations, data_H4$Sigma, effective_nH4, paste0(H1, ";", H2, ";", H3), Bayes_pack, test)
+            output_BF_H1 <- BF_multiv(data_H1_df, data_H1$Sigma, effective_nH1, paste0(H1, ";", H2, ";", H3), Bayes_pack, test)
+            output_BF_H2 <- BF_multiv(data_H2_df, data_H2$Sigma, effective_nH2, paste0(H1, ";", H2, ";", H3), Bayes_pack, test)
+            output_BF_H3 <- BF_multiv(data_H3_df, data_H3$Sigma, effective_nH3, paste0(H1, ";", H2, ";", H3), Bayes_pack, test)
+            output_BF_H4 <- BF_multiv(data_H4_df, data_H4$Sigma, effective_nH4, paste0(H1, ";", H2, ";", H3), Bayes_pack, test)
             
         } else if (test == "omnibus") {
             output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
@@ -664,9 +660,10 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_nH1, list(H1), list(Bayes_pack), list(difference), list(test))
             output_BF_H2 <- Map(BF_multiv, data_H2$estimations, data_H2$Sigma, effective_nH2, list(H1), list(Bayes_pack), list(difference), list(test))
         }
-        
+        browser()
         # Results ---------------------------------------------------------------------
         if (test == "intersection-union") {
+            
             results_H1[, 1] <- unlist(lapply(output_BF_H1, extract_res, 1)) # Bayes factor H1vsHu
             results_H1[, 2] <- unlist(lapply(output_BF_H1, extract_res, 5)) # Bayes factor H1vsH2
             results_H1[, 3] <- unlist(lapply(output_BF_H1, extract_res, 6)) # Bayes factor H1vsH3
@@ -686,7 +683,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             results_H3[, 3] <- unlist(lapply(output_BF_H3, extract_res, 13)) # Bayes factor H3vsHc
             #results_H3[, 4] <- unlist(lapply(output_BF_H3, extract_res, 17)) #posterior model probabilities of H3vsHc
             colnames(results_H3) <- c("BF.3u", "BF.31", "BF.3c")
-            
+            browser()
             results_H4[, 1] <- unlist(lapply(output_BF_H4, extract_res, 4)) # Bayes factor H4vsHu
             results_H4[, 2] <- unlist(lapply(output_BF_H4, extract_res, 10)) # Bayes factor H4vsH1
             results_H4[, 3] <- unlist(lapply(output_BF_H4, extract_res, 14)) # Bayes factor H4vsHc

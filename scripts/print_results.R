@@ -54,33 +54,59 @@ print_results_multiv <- function(object_result, test, list_hypo) {
         row <- paste(rep("-", nchar(title)), collapse = "")
         cat(row, "\n")
         print_hypotheses(list_hypo)
-        
-        # Create dataframe with results
-        results_df <- data.frame("h" = character(),
-                                 "P_BF1i" = numeric(),
-                                 "P_BFi1" = numeric())
 
-        names(results_df) <- c("Hypothesis", 
-                               paste("P(BF.1i >", object_result$BF_thres,"| H1)"),
-                               paste("P(BF.i1 >", object_result$BF_thres,"| Hi)"))
+                # Create dataframe with results
+        results_PMP <- data.frame("Hypothesis" = character(),
+                                  "Prop_PMP" = numeric(),
+                                  "error" = numeric())
+        results_BF <- data.frame("h" = character(),
+                                 "P_BF1m" = numeric(),
+                                 "P_BFm1" = numeric())
+        names(results_PMP) <- c("Hypothesis",
+                                paste("P(PMP > )", object_result$pmp_thresh, "| H"),
+                                " Error")
+        names(results_BF) <- c("Hypothesis", 
+                               paste("BF.1m| H1"),
+                               paste("BF.m1| Hm"))
+        
+        ## First column
         for (h in 2:length(list_hypo)) {
-            results_df[(h - 1), 1] <- paste0("i = ", h)
+            results_BF[(h - 1), 1] <- paste0("m = ", h)
+        }
+        for (h in 1:length(list_hypo)) {
+            results_PMP[h, 1] <- paste("Hypothesis", h)
         }
         
-        results_df[1, 2] <- object_result$Proportion.BF12 #BF_12
-        results_df[2, 2] <- object_result$Proportion.BF13 #BF_13
-        results_df[3, 2] <- object_result$Proportion.BF14 #BF_14
-        results_df[1, 3] <- object_result$Proportion.BF21 #BF_21
-        results_df[2, 3] <- object_result$Proportion.BF31 #BF_31
-        results_df[3, 3] <- object_result$Proportion.BF41 #BF_41
+        ## Second column
+        results_BF[1, 2] <- median(object_result$data$results_H1[, 2]) #BF_12
+        results_BF[2, 2] <- median(object_result$data$results_H1[, 3]) #BF_13
+        results_BF[3, 2] <- median(object_result$data$results_H1[, 4]) #BF_14
+        
+        results_PMP[1, 2] <- object_result$Proportion.PMP1
+        results_PMP[2, 2] <- object_result$Proportion.PMP2
+        results_PMP[3, 2] <- object_result$Proportion.PMP3
+        results_PMP[4, 2] <- object_result$Proportion.PMP4
+        
+        ## Third column
+        results_BF[1, 3] <- median(object_result$data$results_H2[, 2]) #BF_21
+        results_BF[2, 3] <- median(object_result$data$results_H3[, 2]) #BF_31
+        results_BF[3, 3] <- median(object_result$data$results_H4[, 2]) #BF_41
+        
+        results_PMP[1, 3] <- 1 - object_result$Proportion.PMP1
+        results_PMP[2, 3] <- 1 - object_result$Proportion.PMP2
+        results_PMP[3, 3] <- 1 - object_result$Proportion.PMP3
+        results_PMP[4, 3] <- 1 - object_result$Proportion.PMP4
         
         # Print results
         cat("Number of clusters: ", object_result$n2, "\n")
         cat("Cluster size: ", object_result$n1, "\n")
-        stargazer::stargazer(results_df, type = "text", summary = FALSE)
+        stargazer::stargazer(results_PMP, type = "text", summary = FALSE)
         # Print eta
         cat("\n", paste(c("\u03B7 = ", object_result$eta)), "\n")
+        cat("\n")
+        stargazer::stargazer(results_BF, type = "text", summary = FALSE)
         cat("***********************************************************************", "\n")
+        # TODO: Add a conclusion of how to interpret the PMP and 1-PMP.
     
         } else if (test == "homogeneity") {    # Print homogeneity of effect size
         title <- "Sample Size Determination for Homogeneity of Effect Sizes Test"
@@ -106,6 +132,7 @@ print_results_multiv <- function(object_result, test, list_hypo) {
         cat("Number of clusters = ", object_result$n2, "\n")
         cat("Cluster size = ", object_result$n1, "\n")
         stargazer::stargazer(results_df, type = "text", summary = FALSE)
+        
         # Print eta
         cat("\n", paste(c("\u03B7 = ", object_result$eta)), "\n")
         cat("***********************************************************************", "\n")
