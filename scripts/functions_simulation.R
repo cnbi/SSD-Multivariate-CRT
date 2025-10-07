@@ -13,12 +13,12 @@ run_simulation <- function(Row, name_results, name_times, design_matrix, results
                                 effect_sizes = c(design_matrix[Row, "eff_size1"], design_matrix[Row, "eff_size2"]), 
                                 n1 = design_matrix[Row, "n1"],
                                 n2 = design_matrix[Row, "n2"], 
-                                ndatasets = 200,
+                                ndatasets = 500,
                                 out_specific_ICC = design_matrix[Row, "out_specific_ICC"], 
                                 intersubj_between_outICC = design_matrix[Row, "intersubj_between_outICC"], 
                                 intrasubj_between_outICC = design_matrix[Row, "intrasubj_between_outICC"],
                                 pmp_thresh = design_matrix[Row, "pmp_thresh"], eta = design_matrix[Row, "eta"], 
-                                fixed = as.character(design_matrix[Row, "fixed"]), max = 500, 
+                                fixed = as.character(design_matrix[Row, "fixed"]), max = 300, 
                                 Bayes_pack = as.character(design_matrix[Row, "Bayes_pack"]),
                                 master.seed = as.integer(seed))
     
@@ -54,9 +54,14 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
     if (!require(doParallel)) {install.packages("doParallel")}
     if (!require(dplyr)) {install.packages("dplyr")}
     if (!require(future.apply)) {install.packages("future.apply")}
-    nrow_design <- nrow(design_matrix)
     
-    if (parall == "doParallel") {
+    # Required variables
+    nrow_design <- nrow(design_matrix)
+    name_res <- required_fx[1]
+    name_t <- required_fx[2]
+    seed <- as.integer(required_fx[3])
+    
+    if (parall == "Parallel") {
         # Detect
         if (missing(nclusters)) {
             ncluster <- detectCores() / 2
@@ -64,20 +69,18 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
             ncluster <- nclusters
         }
         # Create clusters and register them
-        cl <- makeCluster(ncluster)
-        registerDoParallel(cl)
-        # Export libraries, functions and variables
-        clusterExport(cl, required_fx)
-        # Distribute rows into clusters
-        # identify_clusters <- cut(seq(nrow_design), breaks = ncluster, labels = FALSE)
-        rows_divided <- split(seq(nrow_design), 1:ncluster)
-        rows_divided <- lapply(seq(nrow_design), function(x) list(x))
+        cl <- makeCluster(ncluster, type = "FORK")
         # Apply simulation
-        clusterApply(cl, rows_divided, run_simulation)
+        clusterMap(cl, run_simulation, Row = 1:nrow_design,
+                   MoreArgs = list(
+                       name_results = name_res,
+                       name_times = name_t,
+                       design_matrix = design_matrix,
+                       results_folder = folder,
+                       seed = seed)
+                   )
         # Stop parallelisation
         stopCluster(cl)
-        stopImplicitCluster()
-        
         
     } else if (parall == "forEach") {
         # Detect
@@ -88,18 +91,19 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
         }
         
         # Create clusters and register them
-        cl <- makeCluster(ncluster)
+        cl <- makeCluster(ncluster, type = "FORK")
         registerDoParallel(cl)
         # Distribute rows into clusters
         rows_divided <- split(seq(nrow_design), 1:ncluster)
         # Export libraries, functions and variables
         # clusterExport(cl)
-        browser()
+        #clusterExport(cl, required_fx, varlist = c("run_simulation", "SSD_mult_CRT"))
         # Parallelisation
+        
         foreach(Rows = rows_divided, .errorhandling = "remove") %dopar% {
-            run_simulation(Rows, name_results = required_fx[1], name_times = required_fx[2],
+            run_simulation(Row = Rows, name_results = name_res, name_times = name_t,
                            design_matrix = design_matrix, results_folder = folder,
-                           seed = as.integer(required_fx[3]))
+                           seed = seed)
         }
         # Stop clusters
         stopCluster(cl)
@@ -114,8 +118,9 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
         plan(multisession, workers = nclusters)
         rows_to_run <- 1:nrow_design
         future_lapply(rows_to_run, function(Row){
-            run_simulation(Row, name_results = required_fx[1], name_times = required_fx[2],
-                           design_matrix = design_matrix, results_folder = folder, seed = as.integer(required_fx[3]))
+            run_simulation(Row, name_results = name_res, name_times = name_t,
+                           design_matrix = design_matrix, results_folder = folder,
+                           seed = seed)
         })
         
     }

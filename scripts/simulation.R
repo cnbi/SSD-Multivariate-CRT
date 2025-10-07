@@ -90,18 +90,18 @@ source("functions_simulation.R")
 source("find_n2_multiv.R")
 
 # Creation folder for results
-folder_results <- "scripts/FindN2_iu_new"
+folder_results <- "FindN2_iu_new"
 if (!dir.exists(folder_results)) {dir.create(folder_results)}
 # Run simulation
 
-arg_fx <- c("FindN2_IU_", "TimeN2_IU", 2106)
+arg_fx <- c("FindN2_IU_", "TimeN2_IU", 610) #Name of results, name of time, seed
 simulation_parallelised(design_matrix = design_matrix_n2, folder = folder_results, nclusters = 5,
-                        parall = "do", required_fx = arg_fx)
+                        parall = "Parallel", required_fx = arg_fx)
 
-simulation_parallelised(design_matrix = design_matrix_n2, folder = folder_results, nclusters = 5,
+simulation_parallelised(design_matrix = design_matrix_n2[1:5, ], folder = folder_results, nclusters = 5,
                         parall = "forEach", required_fx = arg_fx)
 
-simulation_parallelised(design_matrix = design_matrix_n2, folder = folder_results, nclusters = 5,
+simulation_parallelised(design_matrix = design_matrix_n2[1:5, ], folder = folder_results, nclusters = 5,
                         parall = "future", required_fx = arg_fx)
 
 
