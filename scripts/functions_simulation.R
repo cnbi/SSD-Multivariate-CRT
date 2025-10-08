@@ -13,7 +13,7 @@ run_simulation <- function(Row, name_results, name_times, design_matrix, results
                                 effect_sizes = c(design_matrix[Row, "eff_size1"], design_matrix[Row, "eff_size2"]), 
                                 n1 = design_matrix[Row, "n1"],
                                 n2 = design_matrix[Row, "n2"], 
-                                ndatasets = 500,
+                                ndatasets = 400,
                                 out_specific_ICC = design_matrix[Row, "out_specific_ICC"], 
                                 intersubj_between_outICC = design_matrix[Row, "intersubj_between_outICC"], 
                                 intrasubj_between_outICC = design_matrix[Row, "intrasubj_between_outICC"],
