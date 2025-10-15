@@ -62,11 +62,10 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, i
     # Objects to save results
     output_multilevel <- vector(mode = "list", length = ndatasets)
     data_list <- vector(mode = "list", length = ndatasets)
-    seeds <- vector(mode = "numeric", length = ndatasets)
+    seeds <- seq(ndatasets) + master.seed
     
     # Random effects
     for (iteration in seq(ndatasets)) {
-        seeds[iteration] <- iteration + master.seed
         print(seeds[iteration]) #Delete!
         set.seed(seeds[iteration])
         e <- MASS::mvrnorm(n1 * n2, rep(0, n_outcomes), sigma_e)

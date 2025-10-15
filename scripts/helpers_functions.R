@@ -278,3 +278,232 @@ solve_matrix <- function(Matrix, tol = 1e-12) {
         return(solve(Matrix))
     }
 }
+
+
+# Input validation -----------------------------------------------------------.
+
+check_inputs <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICC, 
+                         intersubj_between_outICC, intrasubj_between_outICC,
+                         pmp_thresh = 0.9, eta = 0.8, fixed = "n1", difference = 0.2, max,
+                         master.seed, Bayes_pack){
+    
+    numeric_input <-  c(effect_sizes, n1, n2, ndatasets, out_specific_ICC, 
+                        intersubj_between_outICC, intrasubj_between_outICC, pmp_thresh, 
+                        eta, max)
+    
+    if (!all(sapply(numeric_input, is.numeric))) {
+        stop("All arguments, except 'fixed' and 'Bayes_pack', must be numeric")
+    }
+    
+    if (n2 %% 2 > 0) stop("The number of clusters must be even")
+    if (eta > 1 || eta < 0) {
+        stop("The probability of exceeding the threshold must be between 0 and 1")
+    }
+    if (!is.character(fixed) || !fixed %in% c("n1", "n2")) stop("Fixed can only be a character indicating n1 or n2.")
+    if ((test == "homogeneity") && (effect_sizes[1] < effect_sizes[2]))
+        stop("Effect size 1 must be larger than effect size 2")
+}
+
+# Print information for debug--------------------------
+print_debug_info <- function(test, n1, n2, eval_results, low, high) {
+    if (test == "intersection-union") {
+        message(sprintf("Cluster size: %d, Clusters: %d, PMP1: %.3f, PMP2: %.3f, PMP3: %.3f, PMP4: %.3f, low: %d, high: %d",
+                        n1, n2, eval_results$prop_PMP1, eval_results$prop_PMP2, 
+                        eval_results$prop_PMP3, eval_results$prop_PMP4, low, high))
+    } else if (test == "homogeneity") {
+        message(sprintf("Cluster size: %d, Clusters: %d, BF12: %.3f, BF21: %.3f, low: %d, high: %d",
+                        n1, n2, eval_results$prop_BF12, eval_results$prop_BF21, low, high))
+    }
+}
+
+# Binary search: Updating sample size------------------------------------------
+binary_search <- function(condition_met, test, fixed, n1, n2, low, high, max, eta,
+                          current_eta, previous_eta, previous_high, min_sample){
+    if (!condition_met) {
+        message("Increasing sample size")
+        if (fixed == "n1") {
+            # Increase the number of clusters since eta is too small
+            low <- n2                         #lower bound
+            high <- high                      #higher bound
+            n2 <- round2((low + high) / 2)     #point in the middle
+            if (n2 %% 2 == 0) n2 <- n2 + 1 # To ensure number of clusters is even
+            
+            # Adjust higher bound when there is a ceiling effect
+            if (low + n2 == high * 2) {
+                low <- n2                         #lower bound
+                if (previous_high > 0) {
+                    high <- previous_high
+                } else {
+                    high <- max                       #higher bound
+                }
+                n2 <- round2((low + high) / 2)     #point in the middle
+            }
+            return(list(low = low,
+                        high = high,
+                        n1 = n1,
+                        n2 = n2,
+                        previous_eta = current_eta))
+            
+        } else if (fixed == "n2") {
+                # Increase the cluster sizes since eta is too small
+                low <- n1                        #lower bound
+                high <- high                     #higher bound
+                n1 <- round2((low + high) / 2)    #point in the middle
+                
+                # Adjust higher bound when there is a ceiling effect or no increase of power
+                if ((low + n1 == high * 2) | (current_eta == previous_eta)) {
+                    low <- n1                        #lower bound
+                    #Set the higher bound based on the previous high or the maximum
+                    if (previous_high > 0 ) {
+                        high <- previous_high
+                    } else {
+                        high <- max
+                    }
+                    n1 <- round2((low + high) / 2)    # point in the middle
+                }
+                return(list(low = low,
+                            high = high,
+                            n1 = n1,
+                            n2 = n2,
+                            previous_eta = current_eta))
+        }
+    } else if (condition_met == TRUE) {
+        previous_high <- high
+        previous_eta <- current_eta
+        return(list(previous_high = previous_high,
+                    previous_eta = previous_eta))
+    } # Finish condition met
+}
+
+
+# Final binary search---------------------------------------------------------
+final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, max, eta,
+                                current_eta, previous_eta, previous_high, min_sample){
+    if (!condition_met) {
+        message("Increasing sample size")
+        if (fixed == "n1") {
+            if (n2 == max)    { # If the sample size reaches the maximum
+                return(list(
+                    n1 = n1,
+                    n2 = n2,
+                    ultimate_sample_sizes = TRUE))
+            } else {
+                # Increase the number of clusters since eta is too small
+                low <- n2                         #lower bound
+                high <- high                      #higher bound
+                n2 <- round2((low + high) / 2)     #point in the middle
+                if (n2 %% 2 == 0) n2 <- n2 + 1 # To ensure number of clusters is even
+                
+                # Adjust higher bound when there is a ceiling effect
+                if (low + n2 == high * 2) {
+                    low <- n2                         #lower bound
+                    if (previous_high > 0) {
+                        high <- previous_high
+                    } else {
+                        high <- max                       #higher bound
+                    }
+                    n2 <- round2((low + high) / 2)     #point in the middle
+                }
+                return(list(low = low,
+                            high = high,
+                            n1 = n1,
+                            n2 = n2,
+                            ultimate_sample_sizes = FALSE,
+                            previous_eta = current_eta))
+            }
+        } else if (fixed == "n2") {
+            if (n1 == max)    {# If the sample size reaches the maximum
+                return(list(low = min_sample,
+                            high = max,
+                            n1 = n1,
+                            n2 = n2,
+                            ultimate_sample_sizes = TRUE))
+            } else {
+                # Increase the cluster sizes since eta is too small
+                low <- n1                        #lower bound
+                high <- high                     #higher bound
+                n1 <- round2((low + high) / 2)    #point in the middle
+                
+                # Adjust higher bound when there is a ceiling effect or no increase of power
+                if ((low + n1 == high * 2) | (current_eta == previous_eta)) {
+                    low <- n1                        #lower bound
+                    #Set the higher bound based on the previous high or the maximum
+                    if (previous_high > 0 ) {
+                        high <- previous_high
+                    } else {
+                        high <- max
+                    }
+                    n1 <- round2((low + high) / 2)    # point in the middle
+                }
+                return(list(low = low,
+                            high = high,
+                            n1 = n1,
+                            n2 = n2,
+                            ultimate_sample_sizes = FALSE,
+                            previous_eta = current_eta))
+            }
+        }
+    } else if (condition_met == TRUE) {
+        previous_high <- high
+        print(c("previous:", previous_eta))
+        
+        if (fixed == "n1") {
+            # Eta is close enough to the desired eta or
+            # there is no change in eta and the lower bound is close to the middle point
+            if ((current_eta - eta < 0.1 && n2 - low == 2) ||
+                (previous_eta == current_eta && n2 - low == 2)){
+                return(list(
+                    n1 = n1,
+                    n2 = n2,
+                    ultimate_sample_sizes = TRUE))
+                
+            } else {
+                # Decreasing to find the ultimate number of clusters
+                message("Lowerign sample size")
+                low <- low                         #lower bound
+                high <- n2                         #higher bound
+                n2 <- round2((low + high) / 2)      #point in the middle
+                if (n2 %% 2 == 0) n2 <- n2 + 1
+                if (n2 < 30) warning("The number of groups is less than 30.
+                                             This may cause problems in convergence and singularity.")
+                
+                return(list(
+                    low = low,
+                    high = high,
+                    n1 = n1,
+                    n2 = n2,
+                    ultimate_sample_sizes = FALSE,
+                    previous_high = high, #The higher bound when the power criterion was met
+                    previous_eta = current_eta
+                ))
+            }
+        } else if (fixed == "n2") {
+            # Eta is close enough to the desired eta or
+            # there is no change in eta and the lower bound is close to the middle point or
+            # reached the minimum number that meets the Bayesian power condition
+            if ((current_eta - eta < 0.1 && n1 - low == 1) ||
+                (current_eta == previous_eta && n1 - low == 1) ||
+                (current_eta == previous_eta && low + n1 == high * 2)){
+                return(list(low = min_sample,
+                            high = max,
+                            n1 = n1,
+                            n2 = n2,
+                            ultimate_sample_sizes = TRUE))
+                
+            } else {
+                message("Lowerign sample size")
+                # Decreasing the cluster size to find the ultimate sample size
+                low <- low                         #lower bound
+                high <- n1                         #higher bound
+                n1 <- round2((low + high) / 2)      #point in the middle
+                return(list(low = low,
+                            high = high,
+                            n1 = n1,
+                            n2 = n2,
+                            ultimate_sample_sizes = FALSE,
+                            previous_high = high,
+                            previous_eta = current_eta))
+            }
+        }
+    } # Finish condition met
+}
