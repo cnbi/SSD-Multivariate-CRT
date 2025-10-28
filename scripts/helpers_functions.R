@@ -58,8 +58,8 @@ extract_fix_eff <- function(data, n_outcomes){
         names(st_intercepts) <- c("y1", "y2")
         
         fixed_eff <- c(est_intercepts, est_beta1, st_intercepts, st_beta1)
-        names(fixed_eff) <- c("Intercept1", "Intercept2", "Treatment1", "Treatment2",
-                              "st.Intercept1", "st.Intercept2", "st.Treatment1", "st.Treatment2")
+        names(fixed_eff) <- c("Intercept1", "Intercept2", "Outcome1", "Outcome2",
+                              "st.Intercept1", "st.Intercept2", "st.Outcome1", "st.Outcome2")
         
     } else if (n_outcomes == 3) {
         #TODO: Change code to extract for three outcomes
@@ -367,7 +367,7 @@ binary_search <- function(condition_met, test, fixed, n1, n2, low, high, max, et
                             n2 = n2,
                             previous_eta = current_eta))
         }
-    } else if (condition_met == TRUE) {
+    } else if (condition_met) {
         previous_high <- high
         previous_eta <- current_eta
         return(list(previous_high = previous_high,
@@ -443,7 +443,7 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
                             previous_eta = current_eta))
             }
         }
-    } else if (condition_met == TRUE) {
+    } else if (condition_met) {
         previous_high <- high
         print(c("previous:", previous_eta))
         
@@ -451,7 +451,7 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
             # Eta is close enough to the desired eta or
             # there is no change in eta and the lower bound is close to the middle point
             if ((current_eta - eta < 0.1 && n2 - low == 2) ||
-                (previous_eta == current_eta && n2 - low == 2)){
+                (previous_eta == current_eta && n2 - low == 2)) {
                 return(list(
                     n1 = n1,
                     n2 = n2,
@@ -483,7 +483,7 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
             # reached the minimum number that meets the Bayesian power condition
             if ((current_eta - eta < 0.1 && n1 - low == 1) ||
                 (current_eta == previous_eta && n1 - low == 1) ||
-                (current_eta == previous_eta && low + n1 == high * 2)){
+                (current_eta == previous_eta && low + n1 == high * 2)) {
                 return(list(low = min_sample,
                             high = max,
                             n1 = n1,

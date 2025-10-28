@@ -4,7 +4,7 @@
 # Design matrix-----------------------------------------------------------------
 # General factors
 eff_size <- c(0.3, 0.5, 0.7, 0.9)
-outcome_icc <- c(0.01, 0.025, 0.05)
+outcome_icc <- c(0.01, 0.05)
 intersubj_icc <- c(0.005, 0.025)
 intrasubj_icc <- c(0.2, 0.5)
 pmp_thresh <- c(0.9, 0.95)

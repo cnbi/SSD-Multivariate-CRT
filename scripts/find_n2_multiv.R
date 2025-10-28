@@ -4,13 +4,13 @@
 #'n1: Common cluster sizes.
 #'n2: Common number of clusters.
 #'ndatasets: Number of data sets generated.
-#'out_specific_ICC: Outcome/endpoint-specific intraclass correlation coefficient.
+#'out_specific_ICCs: Vector with outcome/endpoint-specific intraclass correlation coefficient.
 #'intersubj_between_outICC: Intersubject between-endpoint/outcome intraclass correlation coefficient.
 #'intrasubj_between_outICC: Intrasubject between-endpoint/outcomes intraclass correlation coefficient.
 #'Bayes_pack
 
 
-SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICC, 
+SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICCs, 
                          intersubj_between_outICC, intrasubj_between_outICC,
                          pmp_thresh = 0.9, eta = 0.8, fixed = "n1", difference = 0.2, max,
                          master.seed, Bayes_pack) {
@@ -31,7 +31,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     sapply(required_functions, source)
     
     # Warnings
-    check_inputs(test, effect_sizes, n1, n2, ndatasets, out_specific_ICC, 
+    check_inputs(test, effect_sizes, n1, n2, ndatasets, out_specific_ICCs, 
                  intersubj_between_outICC, intrasubj_between_outICC,
                  pmp_thresh, eta, fixed, difference, max,
                  master.seed, Bayes_pack)
@@ -40,19 +40,24 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     
     # Hypotheses
     if (test == "intersection-union") {
-        H1 <- "Treatment1>0 & Treatment2>0"
-        H2 <- "Treatment1>0 & Treatment2<0"
-        H3 <- "Treatment1<0 & Treatment2>0"
-        H4 <- "Treatment1<0 & Treatment2<0"
+        H1 <- "Outcome1>0 & Outcome2>0"
+        H2 <- "Outcome1>0 & Outcome2<0"
+        H3 <- "Outcome1<0 & Outcome2>0"
+        H4 <- "Outcome1<0 & Outcome2<0"
         effect_sizesH2 <- effect_sizes * c(1, -1)
         effect_sizesH3 <- effect_sizes * c(-1, 1)
         effect_sizesH4 <- effect_sizes * c(-1, -1)
     } else if (test == "omnibus") {
-        H1 <- "Treatment1>0 & Treatment2>0" #Change this
-        H2 <- "Treatment1>0 & Treatment2<0" #Change this
+        H1 <- "Outcome1>0 & Outcome2>0"
+        H2 <- "Outcome1>0 & Outcome2<0"
+        H3 <- "Outcome1<0 & Outcome2>0"
+        H4 <- "Outcome1<0 & Outcome2<0"
+        effect_sizesH2 <- effect_sizes * c(1, -1)
+        effect_sizesH3 <- effect_sizes * c(-1, 1)
+        effect_sizesH4 <- effect_sizes * c(-1, -1)
     } else if (test == "homogeneity") {
-        H1 <- hypothesis_maker(c("Treatment1", "Treatment2"), difference, "<")
-        H2 <- hypothesis_maker(c("Treatment1", "Treatment2"), difference, ">")
+        H1 <- hypothesis_maker(c("Outcome1", "Outcome2"), difference, "<")
+        H2 <- hypothesis_maker(c("Outcome1", "Outcome2"), difference, ">")
         effect_sizesH2 <- c(effect_sizes[1] + difference, effect_sizes[2])
     }
     
@@ -82,8 +87,13 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         results_H3 <- matrix(NA, ndatasets, 4)
         results_H4 <- matrix(NA, ndatasets, 3)
     } else if (test == "homogeneity") {
-        results_H1 <- matrix(NA, ndatasets, 3)
-        results_H2 <- matrix(NA, ndatasets, 3)
+        results_H1 <- matrix(NA, ndatasets, 5)
+        results_H2 <- matrix(NA, ndatasets, 5)
+    } else if (test == "omnibus") {
+        results_H1 <- matrix(NA, ndatasets, 5)
+        results_H2 <- matrix(NA, ndatasets, 5)
+        results_H3 <- matrix(NA, ndatasets, 5)
+        results_H4 <- matrix(NA, ndatasets, 7)
     }
     
     seed <- ifelse(missing(master.seed), 225, master.seed)
@@ -95,7 +105,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             # If H1 is true -------------------------------------------------
             ## Data generation-----------------
             data_H1 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizes,
-                                                     out_specific_ICC,
+                                                     out_specific_ICCs,
                                                      intersubj_between_outICC,
                                                      intrasubj_between_outICC,
                                                      n_outcomes, master.seed))
@@ -120,24 +130,24 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             
             ## Evaluation of power criteria-----
             condition_met_H1 <- ifelse(prop_PMP1 > eta, TRUE, FALSE)
+            ## Increases sample size if condition is not met
+            updated_sample <- binary_search(condition_met = condition_met_H1, 
+                                            test = test, fixed = fixed,
+                                            n1 = n1, n2 = n2, low = low,
+                                            high = high, max = max, eta = eta,
+                                            current_eta = current_eta, 
+                                            previous_eta = previous_eta,
+                                            previous_high = previous_high,
+                                            min_sample = min_sample)
+            list2env(updated_sample, environment())
             if (!condition_met_H1) {
-                ## Increase sample size if condition is not met
-                updated_sample <- binary_search(condition_met = condition_met_H1, 
-                                                test = test, fixed = fixed,
-                                                n1 = n1, n2 = n2, low = low,
-                                                high = high, max = max, eta = eta,
-                                                current_eta = current_eta, 
-                                                previous_eta = previous_eta,
-                                                previous_high = previous_high,
-                                                min_sample = min_sample)
-                list2env(updated_sample, environment())
                 next
             }
             
             # If H2 is true-----------
             ## Data generation ----------
             data_H2 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH2, 
-                                                     out_specific_ICC, 
+                                                     out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
                                                      n_outcomes, master.seed))
@@ -161,28 +171,29 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             
             ## Evaluation of power criterion-----
             condition_met_H2 <- ifelse(prop_PMP2 > eta, TRUE, FALSE)
+            
+            ## Increases sample size if condition is not met
+            updated_sample <- binary_search(condition_met = condition_met_H2, 
+                                            test = test, fixed = fixed,
+                                            n1 = n1, n2 = n2, low = low,
+                                            high = high, max = max, eta = eta,
+                                            current_eta = current_eta, 
+                                            previous_eta = previous_eta,
+                                            previous_high = previous_high,
+                                            min_sample = min_sample)
+            list2env(updated_sample, environment())
             if (!condition_met_H2) {
-                ## Increase sample size if condition is not met
-                updated_sample <- binary_search(condition_met = condition_met_H2, 
-                                                test = test, fixed = fixed,
-                                                n1 = n1, n2 = n2, low = low,
-                                                high = high, max = max, eta = eta,
-                                                current_eta = current_eta, 
-                                                previous_eta = previous_eta,
-                                                previous_high = previous_high,
-                                                min_sample = min_sample)
-                list2env(updated_sample, environment())
                 next
             }
             
             # If H3 is true-----------
             ## Data generation------------------
             data_H3 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH3, 
-                                                     out_specific_ICC, 
+                                                     out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
                                                      n_outcomes, master.seed))
-            ## Effective samp le size-------------
+            ## Effective sample size-------------
             effective_nH3 <- Map(effective_sample, list(n1), list(n2), data_H3$ICCs, list(n_outcomes))
             effective_nH3 <- Map(min, effective_nH3)
             ## Bayes factors and PMPs-----------
@@ -199,24 +210,25 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             
             ## Evaluation of power criterion------
             condition_met_H3 <- ifelse(prop_PMP3 > eta, TRUE, FALSE)
+            
+            ## Increase sample size if condition is not met
+            updated_sample <- binary_search(condition_met = condition_met_H3, 
+                                            test = test, fixed = fixed,
+                                            n1 = n1, n2 = n2, low = low,
+                                            high = high, max = max, eta = eta,
+                                            current_eta = current_eta, 
+                                            previous_eta = previous_eta,
+                                            previous_high = previous_high,
+                                            min_sample = min_sample)
+            list2env(updated_sample, environment())
             if (!condition_met_H3) {
-                ## Increase sample size if condition is not met
-                updated_sample <- binary_search(condition_met = condition_met_H3, 
-                                                test = test, fixed = fixed,
-                                                n1 = n1, n2 = n2, low = low,
-                                                high = high, max = max, eta = eta,
-                                                current_eta = current_eta, 
-                                                previous_eta = previous_eta,
-                                                previous_high = previous_high,
-                                                min_sample = min_sample)
-                list2env(updated_sample, environment())
                 next
             }
             
             # If H4 is true------------------------------
             ## Data generation---------------------------
             data_H4 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH4, 
-                                                     out_specific_ICC, 
+                                                     out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
                                                      n_outcomes, master.seed))
@@ -239,122 +251,287 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             
             ## Evaluation of power criterion ------------
             condition_met_H4 <- ifelse(prop_PMP4 > eta, TRUE, FALSE)
+            
+            ## Update sample size
+            updated_sample <- final_binary_search(condition_met = condition_met_H4, 
+                                                  test = test, fixed = fixed,
+                                                  n1 = n1, n2 = n2, low = low,
+                                                  high = high, max = max, eta = eta,
+                                                  current_eta = current_eta, 
+                                                  previous_eta = previous_eta,
+                                                  previous_high = previous_high,
+                                                  min_sample = min_sample)
+            list2env(updated_sample, environment())
             if (!condition_met_H4) {
-                ## Increase sample size if condition is not met
-                updated_sample <- final_binary_search(condition_met = condition_met_H4, 
-                                                      test = test, fixed = fixed,
-                                                      n1 = n1, n2 = n2, low = low,
-                                                      high = high, max = max, eta = eta,
-                                                      current_eta = current_eta, 
-                                                      previous_eta = previous_eta,
-                                                      previous_high = previous_high,
-                                                      min_sample = min_sample)
-                list2env(updated_sample, environment())
                 next
             }
             
         } else if (test == "homogeneity") {
+            # If H1 is true----
+            ## Data generation------------
             data_H1 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizes,
-                                                     out_specific_ICC,
+                                                     out_specific_ICCs,
                                                      intersubj_between_outICC,
                                                      intrasubj_between_outICC,
                                                      n_outcomes, master.seed))
             
-            # If H2 is true
+            ## Effective sample size-----------
+            effective_nH1 <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes))
+            effective_nH1 <- Map(min, effective_nH1)
+            
+            ## Bayes factor and PMPs-----------
+            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_nH1, list(paste0(H1)), list(Bayes_pack), list(test))
+            
+            ## Extract results-----------------
+            results_H1[, 1] <- unlist(lapply(output_BF_H1, extract_res, 1)) # Bayes factor H1 vs Hu
+            results_H1[, 2] <- unlist(lapply(output_BF_H1, extract_res, 3)) # Bayes factor H1 vs Hc
+            results_H1[, 3] <- unlist(lapply(output_BF_H1, extract_res, 2)) # Bayes factor Hc vs Hu
+            results_H1[, 4] <- unlist(lapply(output_BF_H1, extract_res, 4)) # Bayes factor Hc vs H1
+            results_H1[, 5] <- unlist(lapply(output_BF_H1, extract_res, 5)) # PMP H1vsHc
+            colnames(results_H1) <- c("BF.1u", "BF.1c", "BF.cu", "BF.c1", "PMP.1")
+            
+            ## Proportion-----------------------
+            prop_PMP1 <- length(which(results_H1[, "PMP.1"] > pmp_thresh)) / ndatasets
+            
+            ## Evaluation of power criteria-----
+            condition_met_H1 <- ifelse(prop_PMP1 > eta, TRUE, FALSE)
+            
+            ## Increase sample size if condition is not met
+            updated_sample <- binary_search(condition_met = condition_met_H1, 
+                                            test = test, fixed = fixed,
+                                            n1 = n1, n2 = n2, low = low,
+                                            high = high, max = max, eta = eta,
+                                            current_eta = current_eta, 
+                                            previous_eta = previous_eta,
+                                            previous_high = previous_high,
+                                            min_sample = min_sample)
+            list2env(updated_sample, environment())
+            if (!condition_met_H1) {
+                next
+            }
+            
+            # If H2 is true----
             data_H2 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH2, 
-                                                     out_specific_ICC, 
+                                                     out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
                                                      n_outcomes, master.seed))
             
-        }
-        
-        # Effective sample size -------------------------------
-        if (test == "omnibus") {
-            effective_n <- effective_sample(n1, n2)
-            effective_n <- Map(min, effective_n)
-            
-        } else if (test == "homogeneity") {
-            effective_nH1 <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes))
-            effective_nH1 <- Map(min, effective_nH1)
+            ## Effective sample size-----------
             effective_nH2 <- Map(effective_sample, list(n1), list(n2), data_H2$ICCs, list(n_outcomes))
             effective_nH2 <- Map(min, effective_nH2)
-        }
-        print("Effective sample size done")
-        
-        # Bayes factors and PMPs-----------------------------------------------------------------
-        
-        if (test == "intersection-union") {
             
+            ## Bayes factors and PMPs------------
+            output_BF_H2 <- Map(BF_multiv, data_H2$estimations, data_H2$Sigma, effective_nH2, list(paste0(H2)), list(Bayes_pack), list(test))
+            
+            ## Extract results-----------------
+            results_H2[, 1] <- unlist(lapply(output_BF_H2, extract_res, 1)) # Bayes factor H2 vs Hu
+            results_H2[, 2] <- unlist(lapply(output_BF_H2, extract_res, 3)) # Bayes factor H2 vs Hc
+            results_H2[, 3] <- unlist(lapply(output_BF_H2, extract_res, 2)) # Bayes factor Hc vs Hu
+            results_H2[, 4] <- unlist(lapply(output_BF_H2, extract_res, 4)) # Bayes factor Hc vs H2
+            results_H2[, 5] <- unlist(lapply(output_BF_H2, extract_res, 5)) # PMP H2
+            colnames(results_H1) <- c("BF.2u", "BF.2c", "BF.cu", "BF.c2", "PMP.2")
+            
+            ## Proportion------------------------
+            prop_PMP2 <- length(which(results_H2[, "PMP.2c"] > pmp_thresh)) / ndatasets
+            
+            ## Evaluation of power criterion-----
+            condition_met_H2 <- ifelse(prop_PMP2 > eta, TRUE, FALSE)
+            
+            ## sample size is updated if condition is not met
+            updated_sample <- final_binary_search(condition_met = condition_met_H2, 
+                                                  test = test, fixed = fixed,
+                                                  n1 = n1, n2 = n2, low = low,
+                                                  high = high, max = max, eta = eta,
+                                                  current_eta = current_eta, 
+                                                  previous_eta = previous_eta,
+                                                  previous_high = previous_high,
+                                                  min_sample = min_sample)
+            list2env(updated_sample, environment())
+            if (!condition_met_H2) {
+                next
+            }
         } else if (test == "omnibus") {
-            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_n, list(H1), list(Bayes_pack))
             
-        } else if (test == "homogeneity") {
-            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_nH1, list(H1), list(Bayes_pack), list(difference), list(test))
-            output_BF_H2 <- Map(BF_multiv, data_H2$estimations, data_H2$Sigma, effective_nH2, list(H1), list(Bayes_pack), list(difference), list(test))
-        }
-        
-        # Results ---------------------------------------------------------------------
-        if (test == "intersection-union") {
+            # If H1 is true -------------------------------------------------
+            ## Data generation-----------------
+            data_H1 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizes,
+                                                     out_specific_ICCs,
+                                                     intersubj_between_outICC,
+                                                     intrasubj_between_outICC,
+                                                     n_outcomes, master.seed))
             
+            ## Effective sample size-----------
+            effective_nH1 <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes))
+            effective_nH1 <- Map(min, effective_nH1)
             
-            #results_H1[, 6] <- unlist(lapply(output_BF_H1, extract_res, 15)) #posterior model probabilities of H1vsHc
+            ## Bayes factor and PMPs-----------
+            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_nH1, list(paste0(H1, ";", H2, ";", H3)), list(Bayes_pack), list(test))
             
-            
-            
-            
-            
-            
-            
-        } else if (test == "homogeneity") {
+            ## Extract results-----------------
             results_H1[, 1] <- unlist(lapply(output_BF_H1, extract_res, 1)) # Bayes factor H1vsHu
-            results_H1[, 2] <- unlist(lapply(output_BF_H1, extract_res, 3)) # Bayes factor H1vsH2
-            results_H1[, 3] <- unlist(lapply(output_BF_H1, extract_res, 5)) # Bayes factor H1vsHc
-            colnames(results_H1) <- c("BF.1u", "BF.12", "BF.1c")
+            results_H1[, 2] <- unlist(lapply(output_BF_H1, extract_res, 5)) # Bayes factor H1vsHc
+            results_H1[, 3] <- unlist(lapply(output_BF_H1, extract_res, 11)) # PMP H1
+            results_H1[, 4] <- unlist(lapply(output_BF_H1, extract_res, 12)) # PMP H2
+            results_H1[, 5] <- unlist(lapply(output_BF_H1, extract_res, 13)) # PMP H3
+            colnames(results_H1) <- c("BF.1u", "BF.1c", "PMP.1", "PMP.2", "PMP.3")
             
+            ## Proportion-----------------------
+            combined_pmp <- results_H1[, "PMP.1"] + results_H1[, "PMP.2"] + results_H1[, "PMP.3"]
+            prop_PMPs <- length(which(combined_pmp > pmp_thresh)) / ndatasets
+            
+            ## Evaluation of power criteria-----
+            condition_met_H1 <- ifelse(prop_PMPs > eta, TRUE, FALSE)
+            ## Increases sample size if condition is not met
+            updated_sample <- binary_search(condition_met = condition_met_H1, 
+                                            test = test, fixed = fixed,
+                                            n1 = n1, n2 = n2, low = low,
+                                            high = high, max = max, eta = eta,
+                                            current_eta = current_eta, 
+                                            previous_eta = previous_eta,
+                                            previous_high = previous_high,
+                                            min_sample = min_sample)
+            list2env(updated_sample, environment())
+            if (!condition_met_H1) {
+                next
+            }
+            
+            # If H2 is true-----------
+            ## Data generation ----------
+            data_H2 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH2, 
+                                                     out_specific_ICCs, 
+                                                     intersubj_between_outICC, 
+                                                     intrasubj_between_outICC,
+                                                     n_outcomes, master.seed))
+            
+            ## Effective sample size-----------
+            effective_nH2 <- Map(effective_sample, list(n1), list(n2), data_H2$ICCs, list(n_outcomes))
+            effective_nH2 <- Map(min, effective_nH2)
+            
+            ## Bayes factors and PMPs------------
+            output_BF_H2 <- Map(BF_multiv, data_H2$estimations, data_H2$Sigma, effective_nH2, list(paste0(H1, ";", H2, ";", H3)), list(Bayes_pack), list(test))
+            
+            ## Extract results ------------------
             results_H2[, 1] <- unlist(lapply(output_BF_H2, extract_res, 2)) # Bayes factor H2vsHu
-            results_H2[, 2] <- unlist(lapply(output_BF_H2, extract_res, 4)) # Bayes factor H2vsH1
-            results_H2[, 3] <- unlist(lapply(output_BF_H2, extract_res, 6)) # Bayes factor H2vsHc
-            colnames(results_H2) <- c("BF.2u", "BF.21", "BF.2c")
+            results_H2[, 2] <- unlist(lapply(output_BF_H2, extract_res, 6)) # Bayes factor H2vsHc
+            results_H2[, 3] <- unlist(lapply(output_BF_H2, extract_res, 11)) # PMP H1
+            results_H2[, 4] <- unlist(lapply(output_BF_H2, extract_res, 12)) # PMP H2
+            results_H2[, 5] <- unlist(lapply(output_BF_H2, extract_res, 13)) # PMP H3
+            colnames(results_H2) <- c("BF.2u", "BF.2c", "PMP.1", "PMP.2", "PMP.3")
             
-        }
-        
-        print("Bayes factor done!")
-        #Evaluation of condition -------------------------------------------
-        # Proportion
-        if (test == "intersection-union") {
+            ## Proportion------------------------
+            combined_pmp <- results_H2[, "PMP.1"] + results_H2[, "PMP.2"] + results_H2[, "PMP.3"]
+            prop_PMPs <- length(which(combined_pmp > pmp_thresh)) / ndatasets
             
+            ## Evaluation of power criterion-----
+            condition_met_H2 <- ifelse(prop_PMPs > eta, TRUE, FALSE)
             
-        } else if (test == "homogeneity") {
-            prop_BF12 <- length(which(results_H1[, "BF.12"] > BF_thresh)) / ndatasets
-            prop_BF21 <- length(which(results_H2[, "BF.21"] > BF_thresh)) / ndatasets
-        }
-        
-        # Evaluation
-        if (test == "intersection-union") {
-            condition_met <- ifelse(prop_PMP1 > eta & prop_PMP2 > eta & prop_PMP3 > eta & prop_PMP4 > eta, TRUE, FALSE)
-            previous_eta <- current_eta
-            if (any(c(prop_PMP1, prop_PMP2, prop_PMP3, prop_PMP4) < eta)) {
-                current_eta <- min(prop_PMP1, prop_PMP2, prop_PMP3, prop_PMP4)
+            ## Increases sample size if condition is not met
+            updated_sample <- binary_search(condition_met = condition_met_H2, 
+                                            test = test, fixed = fixed,
+                                            n1 = n1, n2 = n2, low = low,
+                                            high = high, max = max, eta = eta,
+                                            current_eta = current_eta, 
+                                            previous_eta = previous_eta,
+                                            previous_high = previous_high,
+                                            min_sample = min_sample)
+            list2env(updated_sample, environment())
+            if (!condition_met_H2) {
+                next
             }
-        } else if (test == "homogeneity") {
-            #TODO: Change these
-            condition_met <- ifelse(prop_BF12 > eta & prop_BF21 > eta, TRUE, FALSE)
-            previous_eta <- current_eta
-            if (prop_BF12 < eta & prop_BF21 < eta) {
-                current_eta <- min(prop_BF12, prop_BF21)
-            } else if (prop_BF12 < eta | prop_BF21 < eta) {
-                current_eta <- min(prop_BF12, prop_BF21)
-            } else if (condition_met) {
-                current_eta <- min(prop_BF12, prop_BF21)
+            
+            # If H3 is true-----------
+            ## Data generation------------------
+            data_H3 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH3, 
+                                                     out_specific_ICCs, 
+                                                     intersubj_between_outICC, 
+                                                     intrasubj_between_outICC,
+                                                     n_outcomes, master.seed))
+            ## Effective sample size-------------
+            effective_nH3 <- Map(effective_sample, list(n1), list(n2), data_H3$ICCs, list(n_outcomes))
+            effective_nH3 <- Map(min, effective_nH3)
+            ## Bayes factors and PMPs-----------
+            output_BF_H3 <- Map(BF_multiv, data_H3$estimations, data_H3$Sigma, effective_nH3, list(paste0(H1, ";", H2, ";", H3)), list(Bayes_pack), list(test))
+            
+            ## Extract results------------------
+            results_H3[, 1] <- unlist(lapply(output_BF_H3, extract_res, 3)) # Bayes factor H3vsHu
+            results_H3[, 2] <- unlist(lapply(output_BF_H3, extract_res, 7)) # Bayes factor H3vsH1
+            results_H3[, 3] <- unlist(lapply(output_BF_H3, extract_res, 11)) # PMP H1
+            results_H3[, 4] <- unlist(lapply(output_BF_H3, extract_res, 12)) # PMP H2
+            results_H3[, 5] <- unlist(lapply(output_BF_H3, extract_res, 13)) # PMP H3
+            colnames(results_H3) <- c("BF.3u", "BF.3c", "PMP.1", "PMP.2", "PMP.3")
+            
+            ## Proportion-------------------------
+            combined_PMPs <- results_H3[, "PMP.1"] + results_H3[, "PMP.2"] + results_H3[, "PMP.3"]
+            prop_PMP3 <- length(which(combined_PMPs > pmp_thresh)) / ndatasets
+            
+            ## Evaluation of power criterion------
+            condition_met_H3 <- ifelse(prop_PMP3 > eta, TRUE, FALSE)
+            
+            ## Increase sample size if condition is not met
+            updated_sample <- binary_search(condition_met = condition_met_H3, 
+                                            test = test, fixed = fixed,
+                                            n1 = n1, n2 = n2, low = low,
+                                            high = high, max = max, eta = eta,
+                                            current_eta = current_eta, 
+                                            previous_eta = previous_eta,
+                                            previous_high = previous_high,
+                                            min_sample = min_sample)
+            list2env(updated_sample, environment())
+            if (!condition_met_H3) {
+                next
+            }
+            
+            # If H4 is true------------------------------
+            ## Data generation---------------------------
+            data_H4 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH4, 
+                                                     out_specific_ICCs, 
+                                                     intersubj_between_outICC, 
+                                                     intrasubj_between_outICC,
+                                                     n_outcomes, master.seed))
+            
+            ##Effective sample size---------------------
+            effective_nH4 <- Map(effective_sample, list(n1), list(n2), data_H4$ICCs, list(n_outcomes))
+            effective_nH4 <- Map(min, effective_nH4)
+            
+            ## Bayes factors and PMPs--------------------
+            output_BF_H4 <- Map(BF_multiv, data_H4$estimations, data_H4$Sigma, effective_nH4, list(paste0(H1, ";", H2, ";", H3)), list(Bayes_pack), list(test))
+            
+            ## Extract results --------------------------
+            results_H4[, 1] <- unlist(lapply(output_BF_H4, extract_res, 4)) # Bayes factor H4vsHu
+            results_H4[, 2] <- unlist(lapply(output_BF_H4, extract_res, 8)) # Bayes factor H4vsH1
+            results_H4[, 3] <- unlist(lapply(output_BF_H4, extract_res, 9)) # Bayes factor H4vsH2
+            results_H4[, 4] <- unlist(lapply(output_BF_H4, extract_res, 10)) # Bayes factor H4vsH3
+            results_H4[, 5] <- unlist(lapply(output_BF_H4, extract_res, 11)) # PMP 1
+            results_H4[, 6] <- unlist(lapply(output_BF_H4, extract_res, 12)) # PMP 2
+            results_H4[, 7] <- unlist(lapply(output_BF_H4, extract_res, 13)) # PMP 3
+            colnames(results_H4) <- c("BF.4u", "BF.41",  "BF.42", "BF.43",
+                                      "PMP.1", "PMP.2", "PMP.3")
+            
+            ## Proportion--------------------------------
+            combined_PMPs <- results_H3[, "PMP.1"] + results_H3[, "PMP.2"] + results_H3[, "PMP.3"]
+            PMP_4 <- 1 - combined_PMPs
+            prop_PMP4 <- length(which(PMP_4 > pmp_thresh)) / ndatasets
+            
+            ## Evaluation of power criterion ------------
+            condition_met_H4 <- ifelse(prop_PMP4 > eta, TRUE, FALSE)
+            
+            ## Update sample size
+            updated_sample <- final_binary_search(condition_met = condition_met_H4, 
+                                                  test = test, fixed = fixed,
+                                                  n1 = n1, n2 = n2, low = low,
+                                                  high = high, max = max, eta = eta,
+                                                  current_eta = current_eta, 
+                                                  previous_eta = previous_eta,
+                                                  previous_high = previous_high,
+                                                  min_sample = min_sample)
+            list2env(updated_sample, environment())
+            if (!condition_met_H4) {
+                next
             }
         }
-        print("Power criterion check!")
         
-        # Binary search algorithm ------------------------------------------
-        
-        
-    } # Finish while loop ultimate_sample_size
+    }
     
     if (test == "intersection-union") {
         SSD_object <- list("n1" = n1,
@@ -373,12 +550,25 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     } else if (test == "homogeneity") {
         SSD_object <- list("n1" = n1,
                            "n2" = n2,
-                           "Proportion.BF12" = prop_BF12,
-                           "Proportion.BF21" = prop_BF21,
-                           "BF_thres" = BF_thresh,
+                           "Proportion.PMP1" = prop_PMP1,
+                           "Proportion.PMP2" = prop_PMP2,
+                           "pmp_thresh" = pmp_thresh,
                            "eta" = eta,
                            "data" = list(results_H1 = results_H1,
                                          results_H2 = results_H2))
+    } else if (test ==  "omnibus") {
+        SSD_object <- list("n1" = n1,
+                           "n2" = n2,
+                           "Proportion.PMP1" = prop_PMP1,
+                           "Proportion.PMP2" = prop_PMP2,
+                           "Proportion.PMP3" = prop_PMP3,
+                           "Proportion.PMP4" = prop_PMP4,
+                           "pmp_thresh" = pmp_thresh,
+                           "eta" = eta,
+                           "data" = list(results_H1 = results_H1,
+                                         results_H2 = results_H2,
+                                         results_H3 = results_H3,
+                                         results_H4 = results_H4))
     }
     
     # Final output ------
@@ -391,7 +581,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
 }
 
 # Version 2-------------------------------------------------------------------
-# SSD_mult_CRT2 <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICC, 
+# SSD_mult_CRT2 <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICCs, 
 #                          intersubj_between_outICC, intrasubj_between_outICC,
 #                          BF_thresh = 3, eta = 0.8, fixed = "n1", difference = 0.2, max,
 #                          seed, Bayes_pack) {
@@ -433,7 +623,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
 #     
 #     
 #     # Warnings
-#     if (is.numeric(c(effect_sizes, n1, n2, ndatasets, out_specific_ICC, 
+#     if (is.numeric(c(effect_sizes, n1, n2, ndatasets, out_specific_ICCs, 
 #                      intersubj_between_outICC, intrasubj_between_outICC, BF_thresh, 
 #                      eta, max)) == FALSE) 
 #         stop("All arguments, except 'fixed', must be numeric")
@@ -503,40 +693,40 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
 #         if (test == "intersection-union") {
 #             # If H1 is true
 #             data_H1 <- do.call(gen_multiv_data, list(1, n1, n2, effect_sizes,
-#                                                      out_specific_ICC,
+#                                                      out_specific_ICCs,
 #                                                      intersubj_between_outICC,
 #                                                      intrasubj_between_outICC,
 #                                                      n_outcomes, seed))
 #             
 #             # If H2 is true
 #             data_H2 <- do.call(gen_multiv_data, list(1, n1, n2, effect_sizesH2, 
-#                                                      out_specific_ICC, 
+#                                                      out_specific_ICCs, 
 #                                                      intersubj_between_outICC, 
 #                                                      intrasubj_between_outICC,
 #                                                      n_outcomes, seed))
 #             
 #             data_H3 <- do.call(gen_multiv_data, list(1, n1, n2, effect_sizesH3, 
-#                                                      out_specific_ICC, 
+#                                                      out_specific_ICCs, 
 #                                                      intersubj_between_outICC, 
 #                                                      intrasubj_between_outICC,
 #                                                      n_outcomes, seed))
 #             
 #             data_H4 <- do.call(gen_multiv_data, list(1, n1, n2, effect_sizesH4, 
-#                                                      out_specific_ICC, 
+#                                                      out_specific_ICCs, 
 #                                                      intersubj_between_outICC, 
 #                                                      intrasubj_between_outICC,
 #                                                      n_outcomes, seed))
 #             
 #         } else if (test == "homogeneity") {
 #             data_H1 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizes,
-#                                                      out_specific_ICC,
+#                                                      out_specific_ICCs,
 #                                                      intersubj_between_outICC,
 #                                                      intrasubj_between_outICC,
 #                                                      n_outcomes, seed))
 #             
 #             # If H2 is true
 #             data_H2 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizesH2, 
-#                                                      out_specific_ICC, 
+#                                                      out_specific_ICCs, 
 #                                                      intersubj_between_outICC, 
 #                                                      intrasubj_between_outICC,
 #                                                      n_outcomes, seed))

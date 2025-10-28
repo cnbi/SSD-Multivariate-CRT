@@ -4,21 +4,21 @@
 #' n1: Common cluster size
 #' n2: Total number of clusters
 #' effect_sizes: Vector with effect sizes or slopes.
-#' out_specific_ICC: Outcome/endpoint-specific intraclass correlation coefficient.
+#' out_specific_ICCs: Vector with outcome/endpoint-specific intraclass correlation coefficient.
 #' intersubj_between_outICC: Intersubject between-endpoint/outcome intraclass correlation coefficient.
 #' intrasubj_between_outICC: Intrasubject between-endpoint/outcomes intraclass correlation coefficient.
 
 # TODO: The following code only works for n_outcomes =  2
 
-gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, intersubj_between_outICC, 
+gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, intersubj_between_outICC, 
                             intrasubj_between_outICC, n_outcomes, master.seed){
     
     set.seed(master.seed)
     marginal_variances <- runif(n_outcomes, 10, 50)
     
     # Calculate the variance components
-    var_u0_scaled <- out_specific_ICC * marginal_variances
-    var_e_scaled <- marginal_variances * (1 - out_specific_ICC)
+    var_u0_scaled <- out_specific_ICCs * marginal_variances
+    var_e_scaled <- marginal_variances * (1 - out_specific_ICCs)
     
     # Defining variance-covariance matrices of random effects
     sigma_u0 <- diag(var_u0_scaled)
@@ -115,12 +115,12 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, i
 
 
 # Version 2---------------------------------------------------------------------
-# gen_multiv_data2 <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, intersubj_between_outICC, 
+# gen_multiv_data2 <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, intersubj_between_outICC, 
 #                             intrasubj_between_outICC, n_outcomes, seed){
 #     
 #     # Matrix with intersubject intraclass correlation coefficients
 #     intersubj_iccs <- matrix(NA, n_outcomes, n_outcomes)
-#     diag_endpoint_icc <- c(out_specific_ICC, out_specific_ICC) #rho_0 of the two outcomes
+#     diag_endpoint_icc <- c(out_specific_ICCs, out_specific_ICCs) #rho_0 of the two outcomes
 #     intersubj_iccs <- diag(diag_endpoint_icc)
 #     values_intersubj_mat <- intersubj_between_outICC #rho_1: order y2y1, y3y1, y3y2
 #     i <- 0
@@ -216,12 +216,12 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, i
 # }
 # 
 # # Version 3---------------------------------------------------------------------
-# gen_multiv_data3 <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICC, intersubj_between_outICC, 
+# gen_multiv_data3 <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, intersubj_between_outICC, 
 #                              intrasubj_between_outICC, n_outcomes, seed){
 #     
 #     # Matrix with intersubject intraclass correlation coefficients
 #     intersubj_iccs <- matrix(NA, n_outcomes, n_outcomes)
-#     diag_endpoint_icc <- c(out_specific_ICC, out_specific_ICC) #rho_0 of the two outcomes
+#     diag_endpoint_icc <- c(out_specific_ICCs, out_specific_ICCs) #rho_0 of the two outcomes
 #     intersubj_iccs <- diag(diag_endpoint_icc)
 #     values_intersubj_mat <- intersubj_between_outICC #rho_1: order y2y1, y3y1, y3y2
 #     i <- 0

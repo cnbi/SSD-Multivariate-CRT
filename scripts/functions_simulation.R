@@ -14,7 +14,7 @@ run_simulation <- function(Row, name_results, name_times, design_matrix, results
                                 n1 = design_matrix[Row, "n1"],
                                 n2 = design_matrix[Row, "n2"], 
                                 ndatasets = 400,
-                                out_specific_ICC = design_matrix[Row, "out_specific_ICC"], 
+                                out_specific_ICC = c(design_matrix[Row, "out_specific_ICC"], 0.1), 
                                 intersubj_between_outICC = design_matrix[Row, "intersubj_between_outICC"], 
                                 intrasubj_between_outICC = design_matrix[Row, "intrasubj_between_outICC"],
                                 pmp_thresh = design_matrix[Row, "pmp_thresh"], eta = design_matrix[Row, "eta"], 

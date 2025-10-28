@@ -67,7 +67,7 @@ calc_aafbf <- function(type, estimates, sigma, b, n_eff, outcome_type) {
 
 BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, difference){
     #name_parameters <- unique(stringr::str_extract_all(hypotheses, "\\b[[:alnum:]_]+\\b")[[1]])
-    name_parameters <- c("Treatment1", "Treatment2")
+    name_parameters <- c("Outcome1", "Outcome2")
     estimates <- estimates[name_parameters]
     good_result <- FALSE
     while (good_result == FALSE) {
@@ -102,7 +102,17 @@ BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, dif
                 PMP3c <- Bf$fit$PMPc[3]
 
             } else if (test == "omnibus") {
+                Bfcu <- Bf$fit$Fit[5] / Bf$fit$Com[5] 
+                Bfc1 <- 1/Bf$fit$BF.c[1] #1/BF1c
+                PMPc <- Bf$fit$PMPc[5]
+                Bf2u <- Bf$fit$Fit[2] / Bf$fit$Com[2]
+                Bf2c <- Bf$fit$BF.c[2]
+                Bfc2 <- 1/Bf2c
+                PMP2c <- Bf$fit$PMPc[2]
                 Bf3u <- Bf$fit$Fit[3] / Bf$fit$Com[3]
+                Bf3c <- Bf$fit$BF.c[3]
+                Bfc3 <- 1/Bf3c
+                PMP3c <- Bf$fit$PMPc[3]
                 
             } else if (test == "homogeneity") {
                 Bfcu <- Bf$fit$Fit[3] / Bf$fit$Com[3]
@@ -136,11 +146,11 @@ BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, dif
                 good_result <- TRUE
             }
         } else if (test == "homogeneity") {
-            if (any(is.na(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21)))) {
+            if (any(is.na(c(Bf1u, Bf1c, PMP1c)))) {
                 good_result <- FALSE
-            } else if (any(is.nan(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21)))) {
+            } else if (any(is.nan(c(Bf1u, Bf1c, PMP1c)))) {
                 good_result <- FALSE
-            } else if (any(is.null(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21)))) {
+            } else if (any(is.null(c(Bf1u, Bf1c, PMP1c)))) {
                 good_result <- FALSE 
             } else {
                 good_result <- TRUE
@@ -149,16 +159,20 @@ BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, dif
     }
 
     if (test == "intersection-union") {
-        results <- list(BF.1u = Bf1u, BF.2u = Bf2u, BF.3u = Bf3u, Bfcu,
+        results <- list(BF.1u = Bf1u, BF.2u = Bf2u, BF.3u = Bf3u,  BF.cu = Bfcu,
                         BF.12 = Bf12, BF.13 = Bf13, 
                         BF.21 = Bf21, BF.31 = Bf31, BF.c1 = Bfc1,
                         BF.1c = Bf1c, BF.2c = Bf2c, BF.3c = Bf3c,
                         PMP.1c = PMP1c, PMP.2c = PMP2c, PMP.3c = PMP3c, PMP.c = PMPc)
     } else if (test == "homogeneity") {
-        results <- list(BF.1u = Bf1u, BF.2u = Bf2u,
-                        BF.12 = Bf12, BF.21 = Bf21,
-                        BF.1c = Bf1c, BF.2c = Bf2c,
-                        PMP.1c = PMP1c, PMP.2c = PMP2c)
+        results <- list(BF.1u = Bf1u, BF.cu = Bfcu,
+                        BF.1c = Bf1c, BF.c1 = Bfc1,
+                        PMP.1 = PMP1c)
+    } else if (test == "omnibus") {
+        results <- list(BF.1u = Bf1u, BF.2u = Bf2u, BF.3u = Bf3u, BF.cu = Bfcu,
+                        BF.1c = Bf1c, BF.2c = Bf2c, BF.3c = Bf3c,
+                        BF.c1 = Bfc1, BF.c2 = Bfc2, BF.c3 = Bfc3,
+                        PMP.1 = PMP1c, PMP.2 = PMP2c, PMP.3 = PMP3c, PMP.c = PMPc)
     }
 
     return(results)
