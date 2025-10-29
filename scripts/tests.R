@@ -173,7 +173,28 @@ a <- SSD_mult_CRT("homogeneity", effect_sizes = c(0.5, 0.3),
                   BF_thresh = 5, eta = 0.8, fixed = "n1", difference = 0.2,
                   max = 300, batch_size = 100, seed = 1855, Bayes_pack = "bain")
 
-
+set.seed(2916)
+test_random <- round(runif(n = 5, min = 1, max = nrow(design_matrix_n2)))
+results <- vector("list", 5)
+index <- 1
+for (i in test_random) {
+    results[[index]] <- SSD_mult_CRT("homogeneity",
+                                     effect_sizes = c(design_matrix_n2[i, 1], design_matrix_n2[i, 2]),
+                                     n1 = design_matrix_n2[i, 10],
+                                     n2 = 26,
+                                     ndatasets = 100,
+                                     out_specific_ICC = c(design_matrix_n2[i, 4], 0.1),
+                                     intersubj_between_outICC = design_matrix_n2[i, 5],
+                                     intrasubj_between_outICC = design_matrix_n2[i, 6],
+                                     pmp_thresh = design_matrix_n2[i, 7],
+                                     eta = design_matrix_n2[i, 8],
+                                     fixed = as.character(design_matrix_n2[i, 9]),
+                                     difference = design_matrix_n2[i, 3],
+                                     max = 100,
+                                     master.seed = 1629,
+                                     Bayes_pack = "bain")
+    index <- index + 1
+}
 # Data generation ---------------------------------------------------------------
 source("multiv_data_generation.R")
 source("helpers_functions.R")
