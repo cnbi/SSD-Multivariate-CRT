@@ -115,10 +115,10 @@ eta <- c(0.8)
 
 # Test-specific factors
 test <- c("homogeneity")
+delta <- c(0.2, 0.3)
 eff_size <- c(0.3, 0.6, 0.9)
 effect_sizes <- matrix(NA, nrow = 3, ncol = 2)
 i <- 1
-
 for (a in 1:length(eff_size)) {
     eff1 <- eff_size[a]
     eff2 <- eff1 - 0.1
@@ -131,12 +131,12 @@ bf_pack <- c("bain")
 n1 <- c(5, 15, 30) 
 n2 <- 30
 fixed <- c("n1")
-design_matrix_n2 <- expand.grid(outcome_icc, intersubj_icc, intrasubj_icc, pmp_thresh,
+design_matrix_n2 <- expand.grid(delta, outcome_icc, intersubj_icc, intrasubj_icc, pmp_thresh,
                                 eta, fixed, n1, n2, test, bf_pack)
 effect_sizes  <- matrix(rep(t(effect_sizes), nrow(design_matrix_n2)),ncol = ncol(effect_sizes), byrow = TRUE)
 effect_sizes <- effect_sizes[order(effect_sizes[, 1], effect_sizes[, 2]), ]
 design_matrix_n2 <- cbind.data.frame(effect_sizes, design_matrix_n2)
-colnames(design_matrix_n2) <- c("eff_size1", "eff_size2", "out_specific_ICC", "intersubj_between_outICC", "intrasubj_between_outICC", "pmp_thresh",
+colnames(design_matrix_n2) <- c("eff_size1", "eff_size2", "delta", "out_specific_ICC", "intersubj_between_outICC", "intrasubj_between_outICC", "pmp_thresh",
                                 "eta", "fixed", "n1", "n2", "test", "Bayes_pack")
 
 # Finding cluster size

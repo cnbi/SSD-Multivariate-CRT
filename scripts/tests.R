@@ -131,9 +131,9 @@ as.numeric(difftime(end_time, start_time, units = "mins"))
 set.seed(2916)
 test_random <- round(runif(n = 5, min = 1, max = nrow(design_matrix_n2)))
 results <- vector("list", 5)
-
-for (i in test_random[2:5]) {
-    results[[1]] <- SSD_mult_CRT("intersection-union",
+index <- 1
+for (i in test_random) {
+    results[[index]] <- SSD_mult_CRT("intersection-union",
                  effect_sizes = c(design_matrix_n2[i, 1], design_matrix_n2[i, 2]),
                  n1 = design_matrix_n2[i, 9],
                  n2 = 26,
@@ -147,6 +147,7 @@ for (i in test_random[2:5]) {
                  max = 100,
                  master.seed = 1629,
                  Bayes_pack = "bain")
+    index <- index + 1
 }
 
 # Homogeneity of effect size test ----------------------------------------------

@@ -63,7 +63,7 @@ print_results_multiv <- function(object_result, test, list_hypo) {
                                  "P_BF1m" = numeric(),
                                  "P_BFm1" = numeric())
         names(results_PMP) <- c("Hypothesis",
-                                paste("P(PMP > )", object_result$pmp_thresh, "| H"),
+                                paste("P(PMP > ", object_result$pmp_thresh, "| H)"),
                                 " Error")
         names(results_BF) <- c("Hypothesis", 
                                paste("BF.1m| H1"),
