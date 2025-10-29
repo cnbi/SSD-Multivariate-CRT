@@ -326,7 +326,7 @@ binary_search <- function(condition_met, test, fixed, n1, n2, low, high, max, et
             low <- n2                         #lower bound
             high <- high                      #higher bound
             n2 <- round2((low + high) / 2)     #point in the middle
-            if (n2 %% 2 == 0) n2 <- n2 + 1 # To ensure number of clusters is even
+            if (!n2 %% 2 == 0) n2 <- n2 + 1 # To ensure number of clusters is even
             
             # Adjust higher bound when there is a ceiling effect
             if (low + n2 == high * 2) {
@@ -392,7 +392,7 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
                 low <- n2                         #lower bound
                 high <- high                      #higher bound
                 n2 <- round2((low + high) / 2)     #point in the middle
-                if (n2 %% 2 == 0) n2 <- n2 + 1 # To ensure number of clusters is even
+                if (!n2 %% 2 == 0) n2 <- n2 + 1 # To ensure number of clusters is even
                 
                 # Adjust higher bound when there is a ceiling effect
                 if (low + n2 == high * 2) {
@@ -459,11 +459,11 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
                 
             } else {
                 # Decreasing to find the ultimate number of clusters
-                message("Lowerign sample size")
+                message("Lowerign number of clusters")
                 low <- low                         #lower bound
                 high <- n2                         #higher bound
                 n2 <- round2((low + high) / 2)      #point in the middle
-                if (n2 %% 2 == 0) n2 <- n2 + 1
+                if (!n2 %% 2 == 0) n2 <- n2 + 1
                 if (n2 < 30) warning("The number of groups is less than 30.
                                              This may cause problems in convergence and singularity.")
                 
@@ -491,7 +491,7 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
                             ultimate_sample_sizes = TRUE))
                 
             } else {
-                message("Lowerign sample size")
+                message("Lowerign cluster size")
                 # Decreasing the cluster size to find the ultimate sample size
                 low <- low                         #lower bound
                 high <- n1                         #higher bound

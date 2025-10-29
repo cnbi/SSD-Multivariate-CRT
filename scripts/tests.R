@@ -23,56 +23,7 @@ SSD_mult_CRT("intersection-union",
 end_time <- Sys.time()
 as.numeric(difftime(end_time, start_time, units = "mins"))
 
-# Hypothesis true
-start_time <- Sys.time()
-SSD_mult_CRT("intersection-union",
-             effect_sizes = c(0.2, 0.4),
-             n1 = 10,
-             n2 = 26,
-             ndatasets = 5,
-             out_specific_ICC = 0.1,
-             intersubj_between_outICC = 0.08,
-             intrasubj_between_outICC = 0.05,
-             BF_thresh = 3,
-             eta = 0.8,
-             fixed = "n1",
-             max = 50,
-             Bayes_pack = "BFpack")
-end_time <- Sys.time()
-as.numeric(difftime(end_time, start_time, units = "mins"))
-
-start_time <- Sys.time()
-SSD_mult_CRT("intersection-union",
-             effect_sizes = c(0.2, 0.4),
-             n1 = 10,
-             n2 = 26,
-             ndatasets = 10,
-             out_specific_ICC = 0.1,
-             intersubj_between_outICC = 0.08,
-             intrasubj_between_outICC = 0.05,
-             BF_thresh = 3,
-             eta = 0.8,
-             fixed = "n1",
-             max = 100,
-             Bayes_pack = "bain")
-end_time <- Sys.time()
-as.numeric(difftime(end_time, start_time, units = "mins"))
-
-
 # Low effect size
-SSD_mult_CRT("intersection-union",
-             effect_sizes = c(0.2, 0.2),
-             n1 = 10,
-             n2 = 26,
-             ndatasets = 5,
-             out_specific_ICC = 0.1,
-             intersubj_between_outICC = 0.08,
-             intrasubj_between_outICC = 0.25,
-             BF_thresh = 3,
-             eta = 0.8,
-             fixed = "n1",
-             max = 50,
-             Bayes_pack = "BFpack")
 
 SSD_mult_CRT("intersection-union",
              effect_sizes = c(0.2, 0.2),
@@ -106,6 +57,7 @@ a <- SSD_mult_CRT("intersection-union",
 end_time <- Sys.time()
 as.numeric(difftime(end_time, start_time, units = "mins"))
 
+# Medium effect sizes
 start_time <- Sys.time()
 b <- SSD_mult_CRT("intersection-union",
              effect_sizes = c(0.4, 0.2),
@@ -127,23 +79,6 @@ as.numeric(difftime(end_time, start_time, units = "mins"))
 start_time <- Sys.time()
 a <- SSD_mult_CRT("intersection-union",
                   effect_sizes = c(0.25, 0.7),
-                  n1 = 10,
-                  n2 = 26,
-                  ndatasets = 5,
-                  out_specific_ICC = 0.1,
-                  intersubj_between_outICC = 0.08,
-                  intrasubj_between_outICC = 0.05,
-                  BF_thresh = 3,
-                  eta = 0.8,
-                  fixed = "n1",
-                  max = 50,
-                  Bayes_pack = "bain")
-end_time <- Sys.time()
-as.numeric(difftime(end_time, start_time, units = "mins"))
-
-start_time <- Sys.time()
-b <- SSD_mult_CRT("intersection-union",
-                  effect_sizes = c(0.7, 0.25),
                   n1 = 10,
                   n2 = 26,
                   ndatasets = 5,
@@ -192,6 +127,27 @@ b <- SSD_mult_CRT("intersection-union",
                   Bayes_pack = "bain")
 end_time <- Sys.time()
 as.numeric(difftime(end_time, start_time, units = "mins"))
+
+set.seed(2916)
+test_random <- round(runif(n = 5, min = 1, max = nrow(design_matrix_n2)))
+results <- vector("list", 5)
+
+for (i in test_random[2:5]) {
+    results[[1]] <- SSD_mult_CRT("intersection-union",
+                 effect_sizes = c(design_matrix_n2[i, 1], design_matrix_n2[i, 2]),
+                 n1 = design_matrix_n2[i, 9],
+                 n2 = 26,
+                 ndatasets = 100,
+                 out_specific_ICC = c(design_matrix_n2[i, 3], 0.1),
+                 intersubj_between_outICC = design_matrix_n2[i, 4],
+                 intrasubj_between_outICC = design_matrix_n2[i, 5],
+                 pmp_thresh = design_matrix_n2[i, 6],
+                 eta = design_matrix_n2[i, 7],
+                 fixed = as.character(design_matrix_n2[i, 8]),
+                 max = 100,
+                 master.seed = 1629,
+                 Bayes_pack = "bain")
+}
 
 # Homogeneity of effect size test ----------------------------------------------
 # Testing warning

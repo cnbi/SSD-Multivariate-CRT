@@ -104,6 +104,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         if (test == "intersection-union") {
             # If H1 is true -------------------------------------------------
             ## Data generation-----------------
+            
             data_H1 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizes,
                                                      out_specific_ICCs,
                                                      intersubj_between_outICC,
@@ -127,7 +128,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             
             ## Proportion-----------------------
             prop_PMP1 <- length(which(results_H1[, "PMP.1c"] > pmp_thresh)) / ndatasets
-            
+            message("empirical eta H1: ", prop_PMP1)
             ## Evaluation of power criteria-----
             condition_met_H1 <- ifelse(prop_PMP1 > eta, TRUE, FALSE)
             ## Increases sample size if condition is not met
@@ -168,10 +169,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             
             ## Proportion------------------------
             prop_PMP2 <- length(which(results_H2[, "PMP.2c"] > pmp_thresh)) / ndatasets
-            
+            message("empirical eta H2: ", prop_PMP2)
             ## Evaluation of power criterion-----
             condition_met_H2 <- ifelse(prop_PMP2 > eta, TRUE, FALSE)
-            
             ## Increases sample size if condition is not met
             updated_sample <- binary_search(condition_met = condition_met_H2, 
                                             test = test, fixed = fixed,
@@ -207,7 +207,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             colnames(results_H3) <- c("BF.3u", "BF.31", "BF.3c", "PMP.3c")
             ## Proportion-------------------------
             prop_PMP3 <- length(which(results_H3[, "PMP.3c"] > pmp_thresh)) / ndatasets
-            
+            message("empirical eta H3: ", prop_PMP3)
             ## Evaluation of power criterion------
             condition_met_H3 <- ifelse(prop_PMP3 > eta, TRUE, FALSE)
             
@@ -251,7 +251,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             
             ## Evaluation of power criterion ------------
             condition_met_H4 <- ifelse(prop_PMP4 > eta, TRUE, FALSE)
-            
+            message("empirical eta H4: ", prop_PMP4)
+            current_eta <- min(prop_PMP1, prop_PMP2, prop_PMP3, prop_PMP4)
+            message(" Current eta: ", current_eta)
             ## Update sample size
             updated_sample <- final_binary_search(condition_met = condition_met_H4, 
                                                   test = test, fixed = fixed,
@@ -261,6 +263,13 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                   previous_eta = previous_eta,
                                                   previous_high = previous_high,
                                                   min_sample = min_sample)
+            
+            print("For the next iteration")
+            message(" High: ", updated_sample$high, "/",
+                    " Number of clusters: ", updated_sample$n2, "/",
+                    " Low: ", updated_sample$low, "/",
+                    " Previous high: ", updated_sample$previous_high, "/",
+                    " Previous eta: ", updated_sample$previous_eta)
             list2env(updated_sample, environment())
             if (!condition_met_H4) {
                 next
@@ -305,6 +314,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                             previous_eta = previous_eta,
                                             previous_high = previous_high,
                                             min_sample = min_sample)
+            
             list2env(updated_sample, environment())
             if (!condition_met_H1) {
                 next
@@ -347,6 +357,12 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                   previous_eta = previous_eta,
                                                   previous_high = previous_high,
                                                   min_sample = min_sample)
+            print("For the next iteration")
+            message(" High: ", updated_sample$high, "/",
+                    " Number of clusters: ", updated_sample$n2, "/",
+                    " Low: ", updated_sample$low, "/",
+                    " Previous high: ", updated_sample$previous_high, "/",
+                    " Previous eta: ", updated_sample$previous_eta)
             list2env(updated_sample, environment())
             if (!condition_met_H2) {
                 next
@@ -525,6 +541,12 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                   previous_eta = previous_eta,
                                                   previous_high = previous_high,
                                                   min_sample = min_sample)
+            print("For the next iteration")
+            message(" High: ", updated_sample$high, "/",
+                    " Number of clusters: ", updated_sample$n2, "/",
+                    " Low: ", updated_sample$low, "/",
+                    " Previous high: ", updated_sample$previous_high, "/",
+                    " Previous eta: ", updated_sample$previous_eta)
             list2env(updated_sample, environment())
             if (!condition_met_H4) {
                 next

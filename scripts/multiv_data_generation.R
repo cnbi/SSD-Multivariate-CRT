@@ -66,7 +66,6 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, 
     
     # Random effects
     for (iteration in seq(ndatasets)) {
-        print(seeds[iteration]) #Delete!
         set.seed(seeds[iteration])
         e <- MASS::mvrnorm(n1 * n2, rep(0, n_outcomes), sigma_e)
         u0 <- MASS::mvrnorm(n2, rep(0, n_outcomes), sigma_u0)
