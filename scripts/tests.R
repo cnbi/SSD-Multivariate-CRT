@@ -1,7 +1,7 @@
 ############# TESTS###########################################
 
 
-source("scripts/find_n2_multiv.R")
+source("find_n2_multiv.R")
 options(error = recover)
 
 # Intersection-union test ------------------------------------------------------

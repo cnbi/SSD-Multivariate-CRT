@@ -56,13 +56,17 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         effect_sizesH3 <- effect_sizes * c(-1, 1)
         effect_sizesH4 <- effect_sizes * c(-1, -1)
     } else if (test == "homogeneity") {
-        H1 <- hypothesis_maker(c("Outcome1", "Outcome2"), difference, "<")
-        H2 <- hypothesis_maker(c("Outcome1", "Outcome2"), difference, ">")
-        effect_sizesH2 <- c(effect_sizes[1] + difference, effect_sizes[2])
+        n_outcomes <- length(effect_sizes)
+        set.seed(master.seed)
+        marginal_variances <- runif(n_outcomes, 10, 50)
+        scaled_difference <- difference * sqrt(marginal_variances)
+        H1 <- hypothesis_maker(c("Outcome1", "Outcome2"), scaled_difference[1], "<")
+        H2 <- hypothesis_maker(c("Outcome1", "Outcome2"), scaled_difference[2], ">")
+        effect_sizesH2 <- c(effect_sizes[1] + (2*difference), effect_sizes[2])
     }
     
     #Starting values
-    # Binary search start ------------------------------------------------------
+    # Binary search start
     if (fixed == "n1") {
         min_sample <- 6                     # Minimum number of clusters
         low <- min_sample                   #lower bound
@@ -99,8 +103,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     seed <- ifelse(missing(master.seed), 225, master.seed)
     
     
-    # Data generation-------------------------
+    
     while (!ultimate_sample_sizes) {
+        # IU--------------------
         if (test == "intersection-union") {
             # If H1 is true -------------------------------------------------
             ## Data generation-----------------
@@ -276,6 +281,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             }
             
         } else if (test == "homogeneity") {
+            # Homogeneity ----------------------------
+            # We transform the 
+            
             # If H1 is true----
             ## Data generation------------
             data_H1 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizes,
@@ -340,10 +348,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             results_H2[, 3] <- unlist(lapply(output_BF_H2, extract_res, 2)) # Bayes factor Hc vs Hu
             results_H2[, 4] <- unlist(lapply(output_BF_H2, extract_res, 4)) # Bayes factor Hc vs H2
             results_H2[, 5] <- unlist(lapply(output_BF_H2, extract_res, 5)) # PMP H2
-            colnames(results_H1) <- c("BF.2u", "BF.2c", "BF.cu", "BF.c2", "PMP.2")
-            
+            colnames(results_H2) <- c("BF.2u", "BF.2c", "BF.cu", "BF.c2", "PMP.2")
             ## Proportion------------------------
-            prop_PMP2 <- length(which(results_H2[, "PMP.2c"] > pmp_thresh)) / ndatasets
+            prop_PMP2 <- length(which(results_H2[, "PMP.2"] > pmp_thresh)) / ndatasets
             
             ## Evaluation of power criterion-----
             condition_met_H2 <- ifelse(prop_PMP2 > eta, TRUE, FALSE)
@@ -368,7 +375,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                 next
             }
         } else if (test == "omnibus") {
-            
+            # Omnibus-----------------------------------------
             # If H1 is true -------------------------------------------------
             ## Data generation-----------------
             data_H1 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizes,

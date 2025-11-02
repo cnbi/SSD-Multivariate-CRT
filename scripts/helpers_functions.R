@@ -92,6 +92,17 @@ extract_var_cov <- function(lavaan_output, n_outcomes) {
     return(var_cov_matrix)
 }
 
+# Extract variance-covariance matrix --------------------------------------------
+#
+extract_var_cov_st <- function(lavaan_output, n_outcomes) {
+    if (n_outcomes == 2) {
+        var_cov_matrix <- lavaan::lavInspect(lavaan_output, "vcov")[4:5, 4:5]
+    } else if (n_outcomes == 3) {
+        param_interest <- c("y1~condition.l2", "y2~condition.l2", "y3~condition.l2")
+        var_cov_matrix <- lavaan::lavInspect(lavaan_output, "vcov")[param_interest, param_interest]
+    }
+    return(var_cov_matrix)
+}
 
 # Calculate empirical ICCs ---------------------------------
 # lavaan object
