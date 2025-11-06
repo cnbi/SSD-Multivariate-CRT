@@ -155,6 +155,19 @@ BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, dif
             } else {
                 good_result <- TRUE
             }
+        } else if (test == "omnibus") {
+            if (any(is.na(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf3c, Bfc2, Bfc1, Bfc3,
+                            PMP1c, PMP2c, PMP3c, PMPc)))) {
+                good_result <- FALSE
+            } else if (any(is.nan(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf3c, Bfc2, Bfc1, Bfc3,
+                                    PMP1c, PMP2c, PMP3c, PMPc)))) {
+                good_result <- FALSE
+            } else if (any(is.null(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf3c, Bfc2, Bfc1, Bfc3,
+                                     PMP1c, PMP2c, PMP3c, PMPc)))) {
+                good_result <- FALSE 
+            } else {
+                good_result <- TRUE
+            }
         }
     }
 
@@ -174,6 +187,5 @@ BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, dif
                         BF.c1 = Bfc1, BF.c2 = Bfc2, BF.c3 = Bfc3,
                         PMP.1 = PMP1c, PMP.2 = PMP2c, PMP.3 = PMP3c, PMP.c = PMPc)
     }
-
     return(results)
 }

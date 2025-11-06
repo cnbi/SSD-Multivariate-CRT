@@ -470,7 +470,7 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
                 
             } else {
                 # Decreasing to find the ultimate number of clusters
-                message("Lowerign number of clusters")
+                message("Lowering number of clusters")
                 low <- low                         #lower bound
                 high <- n2                         #higher bound
                 n2 <- round2((low + high) / 2)      #point in the middle
@@ -502,7 +502,7 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
                             ultimate_sample_sizes = TRUE))
                 
             } else {
-                message("Lowerign cluster size")
+                message("Lowering cluster size")
                 # Decreasing the cluster size to find the ultimate sample size
                 low <- low                         #lower bound
                 high <- n1                         #higher bound
