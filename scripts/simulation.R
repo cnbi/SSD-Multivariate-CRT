@@ -193,7 +193,7 @@ eta <- c(0.8)
 # Test-specific factors
 test <- c("omnibus")
 eff_size <- c(0.2, 0.3, 0.5, 0.7, 0.9)
-effect_sizes <- matrix(NA, nrow = 20, ncol = 2)
+effect_sizes <- matrix(NA, nrow = 10, ncol = 2)
 i <- 1
 for (a in 1:length(eff_size)) {
     eff1 <- eff_size[a]

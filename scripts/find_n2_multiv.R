@@ -532,7 +532,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                       "PMP.1", "PMP.2", "PMP.3")
             
             ## Proportion--------------------------------
-            combined_PMPs <- results_H3[, "PMP.1"] + results_H3[, "PMP.2"] + results_H3[, "PMP.3"]
+            combined_PMPs <- results_H4[, "PMP.1"] + results_H4[, "PMP.2"] + results_H4[, "PMP.3"]
             PMP_4 <- 1 - combined_PMPs
             prop_PMP4 <- length(which(PMP_4 > pmp_thresh)) / ndatasets
             
