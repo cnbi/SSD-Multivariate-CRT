@@ -141,7 +141,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                             test = test, fixed = fixed,
                                             n1 = n1, n2 = n2, low = low,
                                             high = high, max = max, eta = eta,
-                                            current_eta = current_eta, 
+                                            current_eta = prop_PMP1, 
                                             previous_eta = previous_eta,
                                             previous_high = previous_high,
                                             min_sample = min_sample)
@@ -182,7 +182,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                             test = test, fixed = fixed,
                                             n1 = n1, n2 = n2, low = low,
                                             high = high, max = max, eta = eta,
-                                            current_eta = current_eta, 
+                                            current_eta = prop_PMP2, 
                                             previous_eta = previous_eta,
                                             previous_high = previous_high,
                                             min_sample = min_sample)
@@ -221,7 +221,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                             test = test, fixed = fixed,
                                             n1 = n1, n2 = n2, low = low,
                                             high = high, max = max, eta = eta,
-                                            current_eta = current_eta, 
+                                            current_eta = prop_PMP3, 
                                             previous_eta = previous_eta,
                                             previous_high = previous_high,
                                             min_sample = min_sample)
@@ -400,11 +400,11 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             colnames(results_H1) <- c("BF.1u", "BF.1c", "PMP.1", "PMP.2", "PMP.3")
             
             ## Proportion-----------------------
-            combined_pmp <- results_H1[, "PMP.1"] + results_H1[, "PMP.2"] + results_H1[, "PMP.3"]
-            prop_PMPs <- length(which(combined_pmp > pmp_thresh)) / ndatasets
+            combined_pmpH1 <- results_H1[, "PMP.1"] + results_H1[, "PMP.2"] + results_H1[, "PMP.3"]
+            prop_PMP_H1 <- length(which(combined_pmpH1 > pmp_thresh)) / ndatasets
             
             ## Evaluation of power criteria-----
-            condition_met_H1 <- ifelse(prop_PMPs > eta, TRUE, FALSE)
+            condition_met_H1 <- ifelse(prop_PMP_H1 > eta, TRUE, FALSE)
             ## Increases sample size if condition is not met
             updated_sample <- binary_search(condition_met = condition_met_H1, 
                                             test = test, fixed = fixed,
@@ -443,11 +443,11 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             colnames(results_H2) <- c("BF.2u", "BF.2c", "PMP.1", "PMP.2", "PMP.3")
             
             ## Proportion------------------------
-            combined_pmp <- results_H2[, "PMP.1"] + results_H2[, "PMP.2"] + results_H2[, "PMP.3"]
-            prop_PMPs <- length(which(combined_pmp > pmp_thresh)) / ndatasets
+            combined_pmpH2 <- results_H2[, "PMP.1"] + results_H2[, "PMP.2"] + results_H2[, "PMP.3"]
+            prop_PMP_H2 <- length(which(combined_pmpH2 > pmp_thresh)) / ndatasets
             
             ## Evaluation of power criterion-----
-            condition_met_H2 <- ifelse(prop_PMPs > eta, TRUE, FALSE)
+            condition_met_H2 <- ifelse(prop_PMP_H2 > eta, TRUE, FALSE)
             
             ## Increases sample size if condition is not met
             updated_sample <- binary_search(condition_met = condition_met_H2, 
@@ -485,11 +485,11 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             colnames(results_H3) <- c("BF.3u", "BF.3c", "PMP.1", "PMP.2", "PMP.3")
             
             ## Proportion-------------------------
-            combined_PMPs <- results_H3[, "PMP.1"] + results_H3[, "PMP.2"] + results_H3[, "PMP.3"]
-            prop_PMP3 <- length(which(combined_PMPs > pmp_thresh)) / ndatasets
+            combined_pmpH3 <- results_H3[, "PMP.1"] + results_H3[, "PMP.2"] + results_H3[, "PMP.3"]
+            prop_PMP_H3 <- length(which(combined_pmpH3 > pmp_thresh)) / ndatasets
             
             ## Evaluation of power criterion------
-            condition_met_H3 <- ifelse(prop_PMP3 > eta, TRUE, FALSE)
+            condition_met_H3 <- ifelse(prop_PMP_H3 > eta, TRUE, FALSE)
             
             ## Increase sample size if condition is not met
             updated_sample <- binary_search(condition_met = condition_met_H3, 
@@ -534,10 +534,11 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             ## Proportion--------------------------------
             combined_PMPs <- results_H4[, "PMP.1"] + results_H4[, "PMP.2"] + results_H4[, "PMP.3"]
             PMP_4 <- 1 - combined_PMPs
-            prop_PMP4 <- length(which(PMP_4 > pmp_thresh)) / ndatasets
+            prop_PMP_H4 <- length(which(PMP_4 > pmp_thresh)) / ndatasets
             
             ## Evaluation of power criterion ------------
-            condition_met_H4 <- ifelse(prop_PMP4 > eta, TRUE, FALSE)
+            condition_met_H4 <- ifelse(prop_PMP_H4 > eta, TRUE, FALSE)
+            current_eta <- min(prop_PMP_H1, prop_PMP_H2, prop_PMP_H3, prop_PMP_H4)
             
             ## Update sample size
             updated_sample <- final_binary_search(condition_met = condition_met_H4, 
@@ -588,12 +589,16 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     } else if (test ==  "omnibus") {
         SSD_object <- list("n1" = n1,
                            "n2" = n2,
-                           "Proportion.PMP1" = prop_PMP1,
-                           "Proportion.PMP2" = prop_PMP2,
-                           "Proportion.PMP3" = prop_PMP3,
-                           "Proportion.PMP4" = prop_PMP4,
+                           "Proportion.PMP1" = prop_PMP_H1,
+                           "Proportion.PMP2" = prop_PMP_H2,
+                           "Proportion.PMP3" = prop_PMP_H3,
+                           "Proportion.PMP4" = prop_PMP_H4,
                            "pmp_thresh" = pmp_thresh,
                            "eta" = eta,
+                           "Combined.PMP.H1" = combined_pmpH1,
+                           "Combined.PMP.H2" = combined_pmpH2,
+                           "Combined.PMP.H3" = combined_pmpH3,
+                           "PMP.H4" = PMP_4,
                            "data" = list(results_H1 = results_H1,
                                          results_H2 = results_H2,
                                          results_H3 = results_H3,
