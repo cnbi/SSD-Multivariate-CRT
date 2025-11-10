@@ -356,33 +356,31 @@ binary_search <- function(condition_met, test, fixed, n1, n2, low, high, max, et
                         previous_eta = current_eta))
             
         } else if (fixed == "n2") {
-                # Increase the cluster sizes since eta is too small
+            # Increase the cluster sizes since eta is too small
+            low <- n1                        #lower bound
+            high <- high                     #higher bound
+            n1 <- round2((low + high) / 2)    #point in the middle
+            
+            # Adjust higher bound when there is a ceiling effect or no increase of power
+            if ((low + n1 == high * 2) | (current_eta == previous_eta)) {
                 low <- n1                        #lower bound
-                high <- high                     #higher bound
-                n1 <- round2((low + high) / 2)    #point in the middle
-                
-                # Adjust higher bound when there is a ceiling effect or no increase of power
-                if ((low + n1 == high * 2) | (current_eta == previous_eta)) {
-                    low <- n1                        #lower bound
-                    #Set the higher bound based on the previous high or the maximum
-                    if (previous_high > 0 ) {
-                        high <- previous_high
-                    } else {
-                        high <- max
-                    }
-                    n1 <- round2((low + high) / 2)    # point in the middle
+                #Set the higher bound based on the previous high or the maximum
+                if (previous_high > 0 ) {
+                    high <- previous_high
+                } else {
+                    high <- max
                 }
-                return(list(low = low,
-                            high = high,
-                            n1 = n1,
-                            n2 = n2,
-                            previous_eta = current_eta))
+                n1 <- round2((low + high) / 2)    # point in the middle
+            }
+            return(list(low = low,
+                        high = high,
+                        n1 = n1,
+                        n2 = n2,
+                        previous_eta = current_eta))
         }
     } else if (condition_met) {
         previous_high <- high
-        previous_eta <- current_eta
-        return(list(previous_high = previous_high,
-                    previous_eta = previous_eta))
+        return(list(previous_high = previous_high))
     } # Finish condition met
 }
 
@@ -518,3 +516,4 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
         }
     } # Finish condition met
 }
+

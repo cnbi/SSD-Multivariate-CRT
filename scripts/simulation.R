@@ -95,17 +95,20 @@ if (!dir.exists(folder_results)) {dir.create(folder_results)}
 # Run simulation
 
 arg_fx <- c("FindN2_IU_", "TimeN2_IU_", 810) #Name of results, name of time, seed
-simulation_parallelised(design_matrix = design_matrix_n2, folder = folder_results, nclusters = 8,
-                        parall = "Parallel", required_fx = arg_fx)
-
-simulation_parallelised(design_matrix = design_matrix_n2[1:5, ], folder = folder_results, nclusters = 5,
-                        parall = "forEach", required_fx = arg_fx)
 
 simulation_parallelised(design_matrix = design_matrix_n2[1:5, ], folder = folder_results, nclusters = 5,
                         parall = "future", required_fx = arg_fx)
 
 
-# Simulation fo Homogeneity of effect sizes-------------------------------------
+## Collect results in one matrix --------------------------------------------------
+results_iu <- collect_results(design_matrix_n2, finding = "N2", results_folder = "IU", 
+                name_results = "FindN2_IU_", test = test, file_name = "results_FindN2_IU")
+
+times_iu <- collect_times(design_matrix = design_matrix_n2, results_folder = "IU", 
+                          finding = "N2", name_results = "TimeN2_IU", test = test,
+                          file_name = "times_FindN2_IU")
+
+ # Simulation fo Homogeneity of effect sizes-------------------------------------
 # General factors
 outcome_icc <- c(0.01, 0.05)
 intersubj_icc <- c(0.005, 0.025)
@@ -242,4 +245,65 @@ library(purrr)    # Format tables
 # Creation folder for results
 folder_results <- "omnibus"
 if (!dir.exists(folder_results)) {dir.create(folder_results)}
-arg_fx <- c("FindN2_omni_", "TimeN2_omni_", 610)
+arg_fx <- c("FindN2_omni_", "TimeN2_omni_", 810)
+
+# Source
+source("functions_simulation.R")
+
+## Parallelised simulation
+simulation_parallelised(design_matrix = design_matrix_n2, folder = folder_results, nclusters = 160,
+                        parall = "future", required_fx = arg_fx) # Name of results file, Name time files, master.seed
+
+## Collect results
+results_omni <- collect_results(design_matrix = design_matrix_n2, results_folder = "omnibus", finding = "N2", 
+                name_results = "FindN2_omni_", test = "omnibus", file_name = "results_FindN2_omni")
+times_omni <- collect_times(design_matrix = design_matrix_n2, results_folder = "omnibus",
+                            finding = "N2", name_results = "TimeN2_omni_",
+                            test = "omnibus", file_name = "times_FindN2_omni")
+
+
+# Plots-------------------------------------------------------------------------
+library(ggplot2)
+#ICCs
+rho_labs <- c("ICC_0: 0.01", "ICC_0: 0.05")
+names(rho_labs) <- c("0.01", "0.05")
+results_iu_plot <- results_iu[(results_iu$eff_size1==0.3) & 
+                                  (results_iu$eff_size2==0.7) & (results_iu$pmp_thresh==0.95) , ]
+base <- ggplot(results_iu_plot, aes(x = n1.final, y = n2.final,
+                       color = as.factor(out_specific_ICC), 
+                       shape = as.factor(out_specific_ICC))) +
+    geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
+    scale_fill_brewer("Set2") + labs(color = rho_labs, shape = rho_labs) +
+    xlab("Cluster size") + ylab("Number of clusters") + 
+    theme(legend.position = "bottom") + ylim(0, (90 + 5))
+
+base + facet_grid(rows = vars(intersubj_between_outICC ), 
+                       cols = vars(intrasubj_between_outICC))
+
+# Effect sizes
+results_iu_plot <- results_iu[(results_iu$intersubj_between_outICC==0.025 ) & 
+                                  (results_iu$intrasubj_between_outICC==0.5) & (results_iu$pmp_thresh==0.95) , ]
+base <- ggplot(results_iu_plot, aes(x = n1.final, y = n2.final,
+                                    color = as.factor(out_specific_ICC), 
+                                    shape = as.factor(out_specific_ICC))) +
+    geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
+    scale_fill_brewer("Set2") + labs(color = rho_labs, shape = rho_labs) +
+    xlab("Cluster size") + ylab("Number of clusters") + 
+    theme(legend.position = "bottom") + ylim(0, (90 + 5))
+
+base + facet_grid(rows = vars(eff_size1), 
+                  cols = vars(eff_size2))
+
+# Thresholds
+results_iu_plot <- results_iu[(results_iu$intersubj_between_outICC==0.025 ) & 
+                                  (results_iu$intrasubj_between_outICC==0.5) & (results_iu$out_specific_ICC==0.05) , ]
+base <- ggplot(results_iu_plot, aes(x = n1.final, y = n2.final,
+                                    color = as.factor(pmp_thresh), 
+                                    shape = as.factor(pmp_thresh))) +
+    geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
+    scale_fill_brewer("Set2") + labs(color = rho_labs, shape = rho_labs) +
+    xlab("Cluster size") + ylab("Number of clusters") + 
+    theme(legend.position = "bottom") + ylim(0, (90 + 5))
+
+base + facet_grid(rows = vars(eff_size1), 
+                  cols = vars(eff_size2))

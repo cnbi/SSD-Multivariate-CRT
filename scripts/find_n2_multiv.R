@@ -610,6 +610,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         print_results_multiv(SSD_object, test, list(H1, H2, H3, H4))
     } else if (test == "homogeneity") {
         print_results_multiv(SSD_object, test, list(H1, H2))
+    } else if (test == "omnibus") {
+        print_results_multiv(SSD_object, test, list(H1, H2, H3, H4))
     }
     invisible(SSD_object)
 }
