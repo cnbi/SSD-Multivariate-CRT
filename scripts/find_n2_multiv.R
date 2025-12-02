@@ -57,12 +57,13 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
         effect_sizesH4 <- effect_sizes * c(-1, -1)
     } else if (test == "homogeneity") {
         n_outcomes <- length(effect_sizes)
-        set.seed(master.seed)
-        marginal_variances <- runif(n_outcomes, 10, 50)
-        scaled_difference <- difference * sqrt(marginal_variances)
-        H1 <- hypothesis_maker(c("Outcome1", "Outcome2"), scaled_difference[1], "<")
-        H2 <- hypothesis_maker(c("Outcome1", "Outcome2"), scaled_difference[2], ">")
+        marginal_variance <- 30
+        scaled_difference <- difference * sqrt(marginal_variance)
+        H1 <- hypothesis_maker(c("Outcome1", "Outcome2"), scaled_difference, "<")
+        H2 <- hypothesis_maker(c("Outcome1", "Outcome2"), scaled_difference, ">")
         effect_sizesH2 <- c(effect_sizes[1] + (2*difference), effect_sizes[2])
+        H1_print <- hypothesis_maker(c("Outcome1", "Outcome2"), difference, "<")
+        H2_print <- hypothesis_maker(c("Outcome1", "Outcome2"), difference, ">")
     }
     
     #Starting values
@@ -282,22 +283,21 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             
         } else if (test == "homogeneity") {
             # Homogeneity ----------------------------
-            # We transform the 
-            
             # If H1 is true----
             ## Data generation------------
             data_H1 <- do.call(gen_multiv_data, list(ndatasets, n1, n2, effect_sizes,
                                                      out_specific_ICCs,
                                                      intersubj_between_outICC,
                                                      intrasubj_between_outICC,
-                                                     n_outcomes, master.seed))
+                                                     n_outcomes, master.seed,
+                                                     homogeneity = TRUE))
             
             ## Effective sample size-----------
             effective_nH1 <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes))
             effective_nH1 <- Map(min, effective_nH1)
             
             ## Bayes factor and PMPs-----------
-            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_nH1, list(paste0(H1)), list(Bayes_pack), list(test))
+            output_BF_H1 <- Map(BF_multiv, data_H1$estimations, data_H1$Sigma, effective_nH1, list(H1), list(Bayes_pack), list(test))
             
             ## Extract results-----------------
             results_H1[, 1] <- unlist(lapply(output_BF_H1, extract_res, 1)) # Bayes factor H1 vs Hu
@@ -325,7 +325,15 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             
             list2env(updated_sample, environment())
             if (!condition_met_H1) {
-                next
+                if (fixed == "n1") {
+                    if (!n2 == max) {
+                        next
+                    }
+                } else if (fixed == "n2") {
+                    if (!n1 == max) { 
+                        next
+                    }
+                }
             }
             
             # If H2 is true----
@@ -333,14 +341,15 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
-                                                     n_outcomes, master.seed))
+                                                     n_outcomes, master.seed,
+                                                     homogeneity = TRUE))
             
             ## Effective sample size-----------
             effective_nH2 <- Map(effective_sample, list(n1), list(n2), data_H2$ICCs, list(n_outcomes))
             effective_nH2 <- Map(min, effective_nH2)
             
             ## Bayes factors and PMPs------------
-            output_BF_H2 <- Map(BF_multiv, data_H2$estimations, data_H2$Sigma, effective_nH2, list(paste0(H2)), list(Bayes_pack), list(test))
+            output_BF_H2 <- Map(BF_multiv, data_H2$estimations, data_H2$Sigma, effective_nH2, list(H2), list(Bayes_pack), list(test))
             
             ## Extract results-----------------
             results_H2[, 1] <- unlist(lapply(output_BF_H2, extract_res, 1)) # Bayes factor H2 vs Hu
@@ -349,6 +358,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             results_H2[, 4] <- unlist(lapply(output_BF_H2, extract_res, 4)) # Bayes factor Hc vs H2
             results_H2[, 5] <- unlist(lapply(output_BF_H2, extract_res, 5)) # PMP H2
             colnames(results_H2) <- c("BF.2u", "BF.2c", "BF.cu", "BF.c2", "PMP.2")
+            
             ## Proportion------------------------
             prop_PMP2 <- length(which(results_H2[, "PMP.2"] > pmp_thresh)) / ndatasets
             
@@ -609,7 +619,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
     if (test == "intersection-union") {
         print_results_multiv(SSD_object, test, list(H1, H2, H3, H4))
     } else if (test == "homogeneity") {
-        print_results_multiv(SSD_object, test, list(H1, H2))
+        print_results_multiv(SSD_object, test, list(H1_print, H2_print))
     } else if (test == "omnibus") {
         print_results_multiv(SSD_object, test, list(H1, H2, H3, H4))
     }

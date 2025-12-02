@@ -11,10 +11,14 @@
 # TODO: The following code only works for n_outcomes =  2
 
 gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, intersubj_between_outICC, 
-                            intrasubj_between_outICC, n_outcomes, master.seed){
+                            intrasubj_between_outICC, n_outcomes, master.seed, homogeneity = FALSE){
     
-    set.seed(master.seed)
-    marginal_variances <- runif(n_outcomes, 10, 50)
+    if (homogeneity == TRUE){
+        marginal_variances <- c(30, 30)
+    } else{
+        set.seed(master.seed)
+        marginal_variances <- runif(n_outcomes, 10, 50)
+    }
     
     # Calculate the variance components
     var_u0_scaled <- out_specific_ICCs * marginal_variances
@@ -63,7 +67,6 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, 
     output_multilevel <- vector(mode = "list", length = ndatasets)
     data_list <- vector(mode = "list", length = ndatasets)
     seeds <- seq(ndatasets) + master.seed
-    
     # Random effects
     for (iteration in seq(ndatasets)) {
         set.seed(seeds[iteration])

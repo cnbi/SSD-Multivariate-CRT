@@ -183,6 +183,7 @@ print_hypotheses <- function(list_hypo) {
     for (hypoth in 1:length(list_hypo)) {
         cat(paste0("    H", hypoth, ":"), list_hypo[[hypoth]], "\n")
     }
+    
 }
 
 # Compute variance-covariance matrix--------------------------------------------
@@ -333,50 +334,63 @@ binary_search <- function(condition_met, test, fixed, n1, n2, low, high, max, et
     if (!condition_met) {
         message("Increasing sample size")
         if (fixed == "n1") {
-            # Increase the number of clusters since eta is too small
-            low <- n2                         #lower bound
-            high <- high                      #higher bound
-            n2 <- round2((low + high) / 2)     #point in the middle
-            if (!n2 %% 2 == 0) n2 <- n2 + 1 # To ensure number of clusters is even
-            
-            # Adjust higher bound when there is a ceiling effect
-            if (low + n2 == high * 2) {
+            if (n2 == max)    { # If the sample size reaches the maximum
+                return(list(
+                    n1 = n1,
+                    n2 = n2))
+            } else {
+                # Increase the number of clusters since eta is too small
                 low <- n2                         #lower bound
-                if (previous_high > 0) {
-                    high <- previous_high
-                } else {
-                    high <- max                       #higher bound
-                }
+                high <- high                      #higher bound
                 n2 <- round2((low + high) / 2)     #point in the middle
+                if (!n2 %% 2 == 0) n2 <- n2 + 1 # To ensure number of clusters is even
+                
+                # Adjust higher bound when there is a ceiling effect
+                if (low + n2 == high * 2) {
+                    low <- n2                         #lower bound
+                    if (previous_high > 0) {
+                        high <- previous_high
+                    } else {
+                        high <- max                       #higher bound
+                    }
+                    n2 <- round2((low + high) / 2)     #point in the middle
+                }
+                return(list(low = low,
+                            high = high,
+                            n1 = n1,
+                            n2 = n2,
+                            previous_eta = current_eta))
             }
-            return(list(low = low,
-                        high = high,
-                        n1 = n1,
-                        n2 = n2,
-                        previous_eta = current_eta))
             
         } else if (fixed == "n2") {
-            # Increase the cluster sizes since eta is too small
-            low <- n1                        #lower bound
-            high <- high                     #higher bound
-            n1 <- round2((low + high) / 2)    #point in the middle
-            
-            # Adjust higher bound when there is a ceiling effect or no increase of power
-            if ((low + n1 == high * 2) | (current_eta == previous_eta)) {
+            if (n1 == max)    {# If the sample size reaches the maximum
+                return(list(low = min_sample,
+                            high = max,
+                            n1 = n1,
+                            n2 = n2))
+            } else {
+                # Increase the cluster sizes since eta is too small
                 low <- n1                        #lower bound
-                #Set the higher bound based on the previous high or the maximum
-                if (previous_high > 0 ) {
-                    high <- previous_high
-                } else {
-                    high <- max
+                high <- high                     #higher bound
+                n1 <- round2((low + high) / 2)    #point in the middle
+                
+                # Adjust higher bound when there is a ceiling effect or no increase of power
+                if ((low + n1 == high * 2) | (current_eta == previous_eta)) {
+                    low <- n1                        #lower bound
+                    #Set the higher bound based on the previous high or the maximum
+                    if (previous_high > 0 ) {
+                        high <- previous_high
+                    } else {
+                        high <- max
+                    }
+                    n1 <- round2((low + high) / 2)    # point in the middle
                 }
-                n1 <- round2((low + high) / 2)    # point in the middle
+                return(list(low = low,
+                            high = high,
+                            n1 = n1,
+                            n2 = n2,
+                            previous_eta = current_eta))
             }
-            return(list(low = low,
-                        high = high,
-                        n1 = n1,
-                        n2 = n2,
-                        previous_eta = current_eta))
         }
     } else if (condition_met) {
         previous_high <- high
@@ -389,6 +403,7 @@ binary_search <- function(condition_met, test, fixed, n1, n2, low, high, max, et
 final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, max, eta,
                                 current_eta, previous_eta, previous_high, min_sample){
     if (!condition_met) {
+        print(c("n2:", n2, "n1:", n1))
         message("Increasing sample size")
         if (fixed == "n1") {
             if (n2 == max)    { # If the sample size reaches the maximum

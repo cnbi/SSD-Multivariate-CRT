@@ -164,6 +164,22 @@ folder_results <- "homogeneity"
 if (!dir.exists(folder_results)) {dir.create(folder_results)}
 arg_fx <- c("FindN2_homog_", "TimeN2_homog_", 610)
 
+# Change name
+change <- list.files(folder_results, recursive = TRUE, full.names = TRUE)
+change <- change[252:502]
+change <- str_sort(change , numeric = TRUE)
+index <- c(252:502)
+change_df <- cbind(index, change)
+change_df <- change_df[order(as.numeric(change_df[ , 1]), decreasing = TRUE), ]
+change_vector <- change_df[, 2]
+for (file in change_vector) {
+    file_name <- basename(file)
+    file_name_alone <- gsub(".RDS$", "", file_name)
+    number <- gsub("TimeN2_homoge_", "", file_name_alone)
+    actual_number <- as.integer(number) + 36
+    new_name <- paste0(folder_results, "/TimeN2_homoge_", actual_number, ".RDS")
+    file.rename(file, new_name)
+}
 ## Parallelise version with future-----------------------------------------------
 # Source
 source("functions_simulation.R")
@@ -265,45 +281,147 @@ times_omni <- collect_times(design_matrix = design_matrix_n2, results_folder = "
 # Plots-------------------------------------------------------------------------
 library(ggplot2)
 #ICCs
-rho_labs <- c("ICC_0: 0.01", "ICC_0: 0.05")
-names(rho_labs) <- c("0.01", "0.05")
-results_iu_plot <- results_iu[(results_iu$eff_size1==0.3) & 
-                                  (results_iu$eff_size2==0.7) & (results_iu$pmp_thresh==0.95) , ]
+results_iu <- results_FindN2_IU
+rho_labs_intra <- c("Intrasubject between-out: 0.2", "Intrasubject between-out: 0.5")
+names(rho_labs_intra) <- c("0.2", "0.5")
+rho_labs_inter <- c("Intersubject between-out: 0.005", "Intersubject between-out: 0.025")
+names(rho_labs_inter) <- c("0.005", "0.025")
+results_iu_plot <- results_iu[(results_iu$eff_size1 == 0.3) & 
+                                  (results_iu$eff_size2 == 0.7) & (results_iu$pmp_thresh==0.95) , ]
 base <- ggplot(results_iu_plot, aes(x = n1.final, y = n2.final,
                        color = as.factor(out_specific_ICC), 
                        shape = as.factor(out_specific_ICC))) +
     geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
-    scale_fill_brewer("Set2") + labs(color = rho_labs, shape = rho_labs) +
+    scale_fill_brewer("Set2") + labs(color = "Outcome-specific", shape = "Outcome-specific") +
     xlab("Cluster size") + ylab("Number of clusters") + 
     theme(legend.position = "bottom") + ylim(0, (90 + 5))
 
-base + facet_grid(rows = vars(intersubj_between_outICC ), 
-                       cols = vars(intrasubj_between_outICC))
+plot_iccs <- base + facet_grid(rows = vars(intersubj_between_outICC ), 
+                       cols = vars(intrasubj_between_outICC),
+                  labeller = labeller(intersubj_between_outICC = rho_labs_inter,
+                                      intrasubj_between_outICC = rho_labs_intra))
+
+# Save plot with proportions for slide
+ggsave(plot = plot_iccs, filename = "plot_iccs.png", width = 13.33,
+       height = 7.5,
+       dpi = 300)
 
 # Effect sizes
+eff_size1_lab <- c("Effect size 1: 0.3", "Effect size 1: 0.5", "Effect size 1:0.7")
+names(eff_size1_lab) <- c("0.3", "0.5", "0.7")
+eff_size2_lab <- c("Effect size 2: 0.5", "Effect size 2: 0.7", "Effect size 2: 0.9")
+names(eff_size2_lab) <- c("0.5", "0.7", "0.9")
 results_iu_plot <- results_iu[(results_iu$intersubj_between_outICC==0.025 ) & 
                                   (results_iu$intrasubj_between_outICC==0.5) & (results_iu$pmp_thresh==0.95) , ]
 base <- ggplot(results_iu_plot, aes(x = n1.final, y = n2.final,
                                     color = as.factor(out_specific_ICC), 
                                     shape = as.factor(out_specific_ICC))) +
     geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
-    scale_fill_brewer("Set2") + labs(color = rho_labs, shape = rho_labs) +
+    scale_fill_brewer("Set2") + labs(color = "Outcome-specific", shape = "Outcome-specific") +
     xlab("Cluster size") + ylab("Number of clusters") + 
     theme(legend.position = "bottom") + ylim(0, (90 + 5))
 
-base + facet_grid(rows = vars(eff_size1), 
-                  cols = vars(eff_size2))
+plot_effsiz <- base + facet_grid(rows = vars(eff_size1), 
+                  cols = vars(eff_size2),
+                  labeller = labeller(eff_size1 = eff_size1_lab,
+                                      eff_size2 = eff_size2_lab))
+
+# Save plot with proportions for slide
+ggsave(plot = plot_effsiz, filename = "plot_effsiz.png", width = 13.33,
+       height = 7.5,
+       dpi = 300)
 
 # Thresholds
 results_iu_plot <- results_iu[(results_iu$intersubj_between_outICC==0.025 ) & 
                                   (results_iu$intrasubj_between_outICC==0.5) & (results_iu$out_specific_ICC==0.05) , ]
+results_iu_plot <- results_iu_plot[results_iu_plot$eff_size2 == 0.9, ]
 base <- ggplot(results_iu_plot, aes(x = n1.final, y = n2.final,
                                     color = as.factor(pmp_thresh), 
                                     shape = as.factor(pmp_thresh))) +
     geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
-    scale_fill_brewer("Set2") + labs(color = rho_labs, shape = rho_labs) +
+    scale_fill_brewer("Set2") + labs(color = "PMP threshold", shape = "PMP threshold") +
     xlab("Cluster size") + ylab("Number of clusters") + 
     theme(legend.position = "bottom") + ylim(0, (90 + 5))
 
-base + facet_grid(rows = vars(eff_size1), 
-                  cols = vars(eff_size2))
+plot_thres <- base + facet_grid(cols = vars(eff_size1),
+                  labeller = labeller(eff_size1 = eff_size1_lab,
+                                      eff_size2 = eff_size2_lab))
+# Save plot with proportions for slide
+ggsave(plot = plot_thres, filename = "plot_thres.png", width = 13.33,
+       height = 7.5,
+       dpi = 300)
+
+# OMNIBUS #
+#ICCs
+results_omni <- results_FindN2_omni
+rho_labs_intra <- c("Intrasubject between-out: 0.2", "Intrasubject between-out: 0.5")
+names(rho_labs_intra) <- c("0.2", "0.5")
+rho_labs_inter <- c("Intersubject between-out: 0.005", "Intersubject between-out: 0.025")
+names(rho_labs_inter) <- c("0.005", "0.025")
+results_omni_plot <- results_omni[(results_omni$eff_size1==0.3) & 
+                                  (results_omni$eff_size2==0.7) & (results_omni$pmp_thresh==0.95) , ]
+base <- ggplot(results_omni_plot, aes(x = n1.final, y = n2.final,
+                                    color = as.factor(out_specific_ICC), 
+                                    shape = as.factor(out_specific_ICC))) +
+    geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
+    scale_fill_brewer("Set2") + labs(color = "Outcome-specific", shape = "Outcome-specific") +
+    xlab("Cluster size") + ylab("Number of clusters") + 
+    theme(legend.position = "bottom") + ylim(0, (90 + 5))
+
+plot_iccs_omni <- base + facet_grid(rows = vars(intersubj_between_outICC ), 
+                  cols = vars(intrasubj_between_outICC),
+                  labeller = labeller(intersubj_between_outICC = rho_labs_inter,
+                                      intrasubj_between_outICC = rho_labs_intra))
+# Save plot with proportions for slide
+ggsave(plot = plot_iccs_omni, filename = "plot_iccs_omni.png", width = 13.33,
+       height = 7.5,
+       dpi = 300)
+
+# Effect sizes
+eff_size1_lab <- c("Effect size 1: 0.2","Effect size 1: 0.3", "Effect size 1: 0.5",
+                   "Effect size 1: 0.7")
+names(eff_size1_lab) <- c("0.2", "0.3", "0.5", "0.7")
+eff_size2_lab <- c("Effect size 2: 0.3", "Effect size 2: 0.5", "Effect size 2: 0.7", "Effect size 2: 0.9")
+names(eff_size2_lab) <- c("0.3", "0.5", "0.7", "0.9")
+results_omni_plot <- results_omni[(results_omni$intersubj_between_outICC==0.025 ) & 
+                                  (results_omni$intrasubj_between_outICC==0.5) &
+                                    (results_omni$pmp_thresh==0.95) , ]
+base <- ggplot(results_omni_plot, aes(x = n1.final, y = n2.final,
+                                    color = as.factor(out_specific_ICC), 
+                                    shape = as.factor(out_specific_ICC))) +
+    geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
+    scale_fill_brewer("Set2") + labs(color = "Outcome-specific", shape = "Outcome-specific") +
+    xlab("Cluster size") + ylab("Number of clusters") + 
+    theme(legend.position = "bottom") + ylim(0, (250 + 5))
+
+plot_effsiz_omni <- base + facet_grid(rows = vars(eff_size1), 
+                  cols = vars(eff_size2),
+                  labeller = labeller(eff_size1 = eff_size1_lab,
+                                      eff_size2 = eff_size2_lab))
+# Save plot with proportions for slide
+ggsave(plot = plot_effsiz_omni, filename = "plot_effsiz_omni.png", width = 13.33,
+       height = 7.5,
+       dpi = 300)
+
+# Thresholds
+results_omni_plot <- results_omni[(results_omni$intersubj_between_outICC==0.025 ) & 
+                                  (results_omni$intrasubj_between_outICC==0.5) & (results_omni$out_specific_ICC==0.05) , ]
+results_omni_plot <- results_omni_plot[results_omni_plot$eff_size2 == 0.9, ]
+base <- ggplot(results_omni_plot, aes(x = n1.final, y = n2.final,
+                                    color = as.factor(pmp_thresh), 
+                                    shape = as.factor(pmp_thresh))) +
+    geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
+    scale_fill_brewer("Set2") + labs(color = "PMP threshold", shape = "PMP threshold") +
+    xlab("Cluster size") + ylab("Number of clusters") + 
+    theme(legend.position = "bottom") + ylim(0, (200 + 5))
+
+plot_thres_omni <- base + facet_grid(rows = vars(eff_size2), 
+                  cols = vars(eff_size1),
+                  labeller = labeller(eff_size1 = eff_size1_lab,
+                                      eff_size2 = eff_size2_lab))
+# Save plot with proportions for slide
+ggsave(plot = plot_thres_omni, filename = "plot_thres_omni.png", width = 13.33,
+       height = 7.5,
+       dpi = 300)
+
+#HOMOGENEITY

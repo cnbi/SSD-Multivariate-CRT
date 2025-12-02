@@ -18,9 +18,10 @@ run_simulation <- function(Row, name_results, name_times, design_matrix, results
                                 intersubj_between_outICC = design_matrix[Row, "intersubj_between_outICC"], 
                                 intrasubj_between_outICC = design_matrix[Row, "intrasubj_between_outICC"],
                                 pmp_thresh = design_matrix[Row, "pmp_thresh"], eta = design_matrix[Row, "eta"], 
-                                fixed = as.character(design_matrix[Row, "fixed"]), max = 300, 
+                                fixed = as.character(design_matrix[Row, "fixed"]), max = 500, 
                                 Bayes_pack = as.character(design_matrix[Row, "Bayes_pack"]),
-                                master.seed = as.integer(seed))
+                                master.seed = as.integer(seed),
+                                difference = design_matrix_n2[Row, "delta"]) # This is only for homogeneity
     
     # Save results
     end_time <- Sys.time()
@@ -126,8 +127,10 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
 
 # Collect results in a matrix---------------------------------------------
 collect_results <- function(design_matrix, results_folder, finding, name_results, test,
-                            file_name) {
-    rows <-  seq(nrow(design_matrix))
+                            file_name, rows) {
+    if (missing(rows)) {
+        rows <- seq(nrow(design_matrix))
+    }
     if (finding == "N2") {
         results_name <- ifelse(missing(name_results), "/ResultsN2Row", paste0("/", name_results))
     } else if (finding == "N1") {
@@ -180,7 +183,8 @@ collect_results <- function(design_matrix, results_folder, finding, name_results
         }
         # create final data frame
         new_matrix <- as.data.frame(cbind(design_matrix, new_matrix))
-        colnames(new_matrix) <- c(names(design_matrix), "mean.PMP3.H1", 
+        colnames(new_matrix) <- c(names(design_matrix), "median.BF14", "mean.PMP2.H1",
+                                  "mean.PMP3.H1", 
                                   "mean.PMP1.H1", "median.BF24", "mean.PMP2.H2", 
                                   "mean.PMP3.H2", "mean.PMP1.H2", "median.BF34", 
                                   "mean.PMP2.H3", "mean.PMP3.H3", "mean.PMP1.H3", 
@@ -191,7 +195,32 @@ collect_results <- function(design_matrix, results_folder, finding, name_results
                                   "PMP.H4", "n2.final", "n1.final")
         
     } else if (test == "homogeneity") {
-        
+        new_matrix <- matrix(NA, nrow = nrow(design_matrix), ncol = 10)
+        # Extract results
+        for (row_design in rows) {
+            stored_result <- readRDS(paste0(results_folder, results_name, row_design, ".RDS"))
+            n2 <- stored_result$n2
+            n1 <- stored_result$n1
+            median.BF1c <- median(stored_result$data$results_H1[, "BF.1c"])
+            median.BFc1 <- median(stored_result$data$results_H1[, "BF.c1"])
+            mean.PMP1 <- mean(stored_result$data$results_H1[, "PMP.1"])
+            median.BF2c <- median(stored_result$data$results_H2[, "BF.2c"])
+            median.BFc2 <- median(stored_result$data$results_H2[, "BF.c2"])
+            mean.PMP2 <- mean(stored_result$data$results_H2[, "PMP.2"])
+            eta.PMP1 <- stored_result$Proportion.PMP1
+            eta.PMP2 <- stored_result$Proportion.PMP2
+            new_matrix[row_design, ] <- c(median.BF1c, median.BFc1,
+                                          mean.PMP1,
+                                          median.BF2c, median.BFc2, mean.PMP2,
+                                          eta.PMP1, eta.PMP2,
+                                          n2, n1)
+        }
+        # create final data frame
+        new_matrix <- as.data.frame(cbind(design_matrix, new_matrix))
+        colnames(new_matrix) <- c(names(design_matrix), "median.BF1c", 
+                                  "median.BFc1", "mean.PMP1", "median.BF2c",
+                                  "median.BFc2", "mean.PMP2", "eta.PMP1",
+                                  "eta.PMP2", "n2.final", "n1.final")
     } else if (test == "intersection-union") {
         new_matrix <- matrix(NA, ncol = 18, nrow = nrow(design_matrix))
         # extract results
@@ -243,8 +272,10 @@ collect_results <- function(design_matrix, results_folder, finding, name_results
 
 # Collect times in a matrix ----
 collect_times <- function(design_matrix, results_folder, finding, name_results, test,
-                          file_name, rows = 0) {
-    rows <- ifelse(rows == 0, seq(nrow(design_matrix)), rows)
+                          file_name, rows) {
+    if (missing(rows)) {
+        rows <- seq(nrow(design_matrix))
+    }
     new_matrix <- matrix(NA, nrow = nrow(design_matrix), ncol = 1)
     if (finding == "N2") {
         results_name <- ifelse(missing(name_results), "/timeN2Row", paste0("/", name_results))
