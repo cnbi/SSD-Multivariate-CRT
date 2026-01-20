@@ -13,7 +13,7 @@
 gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, intersubj_between_outICC, 
                             intrasubj_between_outICC, n_outcomes, master.seed, homogeneity = FALSE){
     
-    if (homogeneity == TRUE){
+    if (homogeneity == TRUE) {
         marginal_variances <- c(30, 30)
     } else{
         set.seed(master.seed)
@@ -61,7 +61,7 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, 
     
     # Scaled effect sizes
     scaled_effects <- effect_sizes * sqrt(marginal_variances)
-    control_means <- sqrt(marginal_variances) * 2.5 # 2.5 is a random number
+    control_means <- 0
     
     # Objects to save results
     output_multilevel <- vector(mode = "list", length = ndatasets)

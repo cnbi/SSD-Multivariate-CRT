@@ -493,14 +493,15 @@ times_omni <- collect_times(
 
 # Plots-------------------------------------------------------------------------
 library(ggplot2)
+library(dplyr)
+
 results_FindN2_IU <- readRDS("IU/results_FindN2_IU.RDS")
 #ICCs
 results_iu <- results_FindN2_IU
-rho_labs_intra <- c("Intrasubject \nbetween-outcome: 0.2",
-                    "Intrasubject \nbetween-outcome: 0.5")
+rho_labs_intra <- c("rho[1]~0.2", "rho[1]~0.5")
+# rho_labs_intra <- c("rho[1]*': 0.2'", "rho[1]*': 0.5'")
 names(rho_labs_intra) <- c("0.2", "0.5")
-rho_labs_inter <- c("Intersubject \nbetween-outcome: 0.005",
-                    "Intersubject \nbetween-outcome: 0.025")
+rho_labs_inter <- c("rho[2]~0.005", "rho[2]~0.025")
 names(rho_labs_inter) <- c("0.005", "0.025")
 results_iu_plot <- results_iu[(results_iu$eff_size1 == 0.3) &
                                   (results_iu$eff_size2 == 0.5) &
@@ -513,7 +514,7 @@ base <- ggplot(results_iu_plot,
                    shape = as.factor(out_specific_ICC)
                )) +
     geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
-    scale_fill_brewer("Set2") + labs(color = "Outcome-specific ICC", shape = "Outcome-specific ICC") +
+    scale_fill_brewer("Set2") + labs(color = bquote(rho[0]), shape = bquote(rho[0])) +
     xlab("Cluster size") + ylab("Number of clusters") +
     theme(text = element_text(size = 12), legend.position = "bottom") + ylim(0, (90 + 5)) +
     scale_x_continuous(breaks = c(5, 15, 30))
@@ -523,7 +524,8 @@ plot_iccs <- base + facet_grid(
     cols = vars(intrasubj_between_outICC),
     labeller = labeller(
         intersubj_between_outICC = rho_labs_inter,
-        intrasubj_between_outICC = rho_labs_intra
+        intrasubj_between_outICC = rho_labs_intra,
+        .default = label_parsed
     )
 )
 plot_iccs
@@ -539,48 +541,32 @@ ggsave(
 )
 
 # Effect sizes
-eff_size1_lab <- c("Treatment effect 1: 0.3",
-                   "Treatment effect 1: 0.5",
-                   "Treatment effect 1:0.7")
+eff_size1_lab <- c("d 1: 0.3", "d 1: 0.5", "d 1:0.7")
+eff_size1_lab <-  c("d[1]~': 0.3'", "d[1]~': 0.5'", "d[1]~': 0.7'")
+
 names(eff_size1_lab) <- c("0.3", "0.5", "0.7")
-eff_size2_lab <- c("Treatment effect 2: 0.5",
-                   "Treatment effect 2: 0.7",
-                   "Treatment effect 2: 0.9")
+eff_size2_lab <- c("d 2: 0.5", "d 2: 0.7", "d 2: 0.9")
 names(eff_size2_lab) <- c("0.5", "0.7", "0.9")
+
+
+
 results_iu_plot <- results_iu[(results_iu$intersubj_between_outICC == 0.025) &
                                   (results_iu$intrasubj_between_outICC == 0.5) &
                                   (results_iu$pmp_thresh == 0.95) , ]
-base <- ggplot(results_iu_plot,
-               aes(
-                   x = n1.final,
-                   y = n2.final,
-                   color = as.factor(out_specific_ICC),
-                   shape = as.factor(out_specific_ICC)
-               )) +
-    geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
-    scale_fill_brewer("Set2") + labs(color = "Outcome-specific ICC", shape = "Outcome-specific ICC") +
-    xlab("Cluster size") + ylab("Number of clusters") +
-    theme(legend.position = "bottom") + ylim(0, (90 + 5))
 
-plot_effsiz <- base + facet_grid(
-    rows = vars(eff_size1),
-    cols = vars(eff_size2),
-    labeller = labeller(eff_size1 = eff_size1_lab, eff_size2 = eff_size2_lab)
-) + facet_wrap(drop = TRUE)
-
-library(dplyr)
-library(ggplot2)
-
-results_iu_plot2 <- results_iu_plot %>%
-    mutate(eff_pair = factor(
-        paste0(
-            "Treatment effect 1: ",
-            eff_size1,
-            "\nTreatment effect 2: ",
-            eff_size2
-        )
-    ))
-
+results_iu_plot2 <- results_iu_plot %>% 
+    mutate(
+    eff_pair = paste0(eff_size1, "_", eff_size2),  # Simple key like "0.3_0.5"
+    eff_pair = factor(eff_pair,
+                      levels = c("0.3_0.5", "0.3_0.7", "0.3_0.9", 
+                                 "0.5_0.7", "0.5_0.9", "0.7_0.9"),
+                      labels = c("atop(d[1]~': 0.3', d[2]~': 0.5')",
+                                 "atop(d[1]~': 0.3', d[2]~': 0.7')",
+                                 "atop(d[1]~': 0.3', d[2]~': 0.9')",
+                                 "atop(d[1]~': 0.5', d[2]~': 0.7')",
+                                 "atop(d[1]~': 0.5', d[2]~': 0.9')",
+                                 "atop(d[1]~': 0.7', d[2]~': 0.9')"))
+)
 base2 <- ggplot(results_iu_plot2,
                 aes(
                     x = n1.final,
@@ -591,13 +577,13 @@ base2 <- ggplot(results_iu_plot2,
     geom_point() +
     geom_line() + scale_x_continuous(breaks = c(5, 15, 30)) +
     scale_color_brewer(palette = "Set2") +
-    labs(colour = "Outcome-specific ICC", shape = "Outcome-specific ICC") +
+    labs(colour =  bquote(rho[0]), shape =  bquote(rho[0])) +
     xlab("Cluster size") + ylab("Number of clusters") +
     theme(legend.position = "bottom", text =  element_text(size = 12)) +
     ylim(0, 95)
 
 plot_effsiz <- base2 +
-    facet_wrap( ~ eff_pair, ncol = 3)  # choose ncol to taste
+    facet_wrap( ~ eff_pair, ncol = 3, labeller = label_parsed)  # choose ncol to taste
 
 plot_effsiz
 
@@ -615,29 +601,22 @@ ggsave(
 # Thresholds
 results_iu_plot <- results_iu[(results_iu$intersubj_between_outICC == 0.025) &
                                   (results_iu$intrasubj_between_outICC ==
-                                       0.5) & (results_iu$out_specific_ICC == 0.05) , ]
-base <- ggplot(results_iu_plot,
-               aes(
-                   x = n1.final,
-                   y = n2.final,
-                   color = as.factor(pmp_thresh),
-                   shape = as.factor(pmp_thresh)
-               )) +
-    geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
-    scale_fill_brewer("Set2") + labs(color = "PMP threshold", shape = "PMP threshold") +
-    xlab("Cluster size") + ylab("Number of clusters") +
-    theme(legend.position = "bottom") + ylim(0, (90 + 5))
+                                       0.5) &
+                                  (results_iu$out_specific_ICC == 0.05) , ]
 
-plot_thres <- base + facet_grid(
-    cols = vars(eff_size1),
-    labeller = labeller(eff_size1 = eff_size1_lab, eff_size2 = eff_size2_lab)
-)
-
-results_iu_plot2 <- results_iu_plot %>%
-    mutate(eff_pair = factor(
-        paste0("Effect size 1: ", eff_size1, "\nEffect size 2: ", eff_size2)
-    ))
-
+results_iu_plot2 <- results_iu_plot %>% 
+    mutate(
+        eff_pair = paste0(eff_size1, "_", eff_size2),  # Simple key like "0.3_0.5"
+        eff_pair = factor(eff_pair,
+                          levels = c("0.3_0.5", "0.3_0.7", "0.3_0.9", 
+                                     "0.5_0.7", "0.5_0.9", "0.7_0.9"),
+                          labels = c("atop(d[1]~': 0.3', d[2]~': 0.5')",
+                                     "atop(d[1]~': 0.3', d[2]~': 0.7')",
+                                     "atop(d[1]~': 0.3', d[2]~': 0.9')",
+                                     "atop(d[1]~': 0.5', d[2]~': 0.7')",
+                                     "atop(d[1]~': 0.5', d[2]~': 0.9')",
+                                     "atop(d[1]~': 0.7', d[2]~': 0.9')"))
+    )
 base2 <- ggplot(results_iu_plot2,
                 aes(
                     x = n1.final,
@@ -654,7 +633,7 @@ base2 <- ggplot(results_iu_plot2,
     ylim(0, 95)
 
 plot_thres <- base2 +
-    facet_wrap( ~ eff_pair, ncol = 3)
+    facet_wrap( ~ eff_pair, ncol = 3, labeller = label_parsed)
 
 plot_thres
 
@@ -673,11 +652,9 @@ ggsave(
 #ICCs
 results_FindN2_omni <- readRDS("omnibus/results_FindN2_omni.RDS")
 results_omni <- results_FindN2_omni
-rho_labs_intra <- c("Intrasubject \nbetween-outcomes: 0.2",
-                    "Intrasubject \nbetween-outcomes: 0.5")
+rho_labs_intra <- c("expression(rho[1]*: 0.2", "expression(rho[1]*: 0.5")
 names(rho_labs_intra) <- c("0.2", "0.5")
-rho_labs_inter <- c("Intersubject \nbetween-outcomes: 0.005",
-                    "Intersubject \nbetween-outcomes: 0.025")
+rho_labs_inter <- c("ρ_2: 0.005", "ρ_2: 0.025")
 names(rho_labs_inter) <- c("0.005", "0.025")
 results_omni_plot <- results_omni[(results_omni$eff_size1 == 0.3) &
                                       (results_omni$eff_size2 == 0.5) &
@@ -690,7 +667,7 @@ base <- ggplot(results_omni_plot,
                    shape = as.factor(out_specific_ICC)
                )) +
     geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
-    scale_fill_brewer("Set2") + labs(color = "Outcome-specific ICC", shape = "Outcome-specific ICC") +
+    scale_fill_brewer("Set2") + labs(color = "ρ_0", shape = "ρ_0") +
     xlab("Cluster size") + ylab("Number of clusters") +
     theme(text = element_text(size = 12), legend.position = "bottom") + ylim(0, 90) +
     scale_x_continuous(breaks = c(5, 15, 30))
@@ -717,19 +694,9 @@ ggsave(
 )
 
 # Effect sizes
-eff_size1_lab <- c(
-    "Treatment effect 1: 0.2",
-    "Treatment effect 1: 0.3",
-    "Treatment effect 1: 0.5",
-    "Treatment effect 1: 0.7"
-)
+eff_size1_lab <- c("d 1: 0.2", "d 1: 0.3", "d 1: 0.5", "d 1: 0.7")
 names(eff_size1_lab) <- c("0.2", "0.3", "0.5", "0.7")
-eff_size2_lab <- c(
-    "Treatment effect 2: 0.3",
-    "Treatment effect 2: 0.5",
-    "Treatment effect 2: 0.7",
-    "Treatment effect 2: 0.9"
-)
+eff_size2_lab <- c("d 2: 0.3", "d 2: 0.5", "d 2: 0.7", "d 2: 0.9")
 names(eff_size2_lab) <- c("0.3", "0.5", "0.7", "0.9")
 results_omni_plot <- results_omni[(results_omni$intersubj_between_outICC == 0.025) &
                                       (results_omni$intrasubj_between_outICC == 0.5) &
@@ -742,7 +709,7 @@ base <- ggplot(results_omni_plot,
                    shape = as.factor(out_specific_ICC)
                )) +
     geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
-    scale_fill_brewer("Set2") + labs(color = "Outcome-specific", shape = "Outcome-specific") +
+    scale_fill_brewer("Set2") + labs(color = "ρ_0", shape = "ρ_0") +
     xlab("Cluster size") + ylab("Number of clusters") +
     theme(legend.position = "bottom", text = element_text(size = 8)) + ylim(0, (250 + 5))
 
@@ -754,14 +721,7 @@ plot_effsiz_omni <- base + facet_grid(
 plot_effsiz_omni
 
 results_omni_plot2 <- results_omni_plot %>%
-    mutate(eff_pair = factor(
-        paste0(
-            "Treatment effect 1: ",
-            eff_size1,
-            "\nTreatment effect 2: ",
-            eff_size2
-        )
-    ))
+    mutate(eff_pair = factor(paste0("d 1: ", eff_size1, "\nd 2: ", eff_size2)))
 
 base2 <- ggplot(
     results_omni_plot2,
@@ -775,7 +735,7 @@ base2 <- ggplot(
     geom_point() +
     geom_line() + scale_x_continuous(breaks = c(5, 15, 30)) +
     scale_color_brewer(palette = "Set2") +
-    labs(colour = "Outcome-specific ICC", shape = "Outcome-specific ICC") +
+    labs(colour = "ρ_0", shape = "ρ_0") +
     xlab("Cluster size") + ylab("Number of clusters") +
     theme(legend.position = "bottom", text =  element_text(size = 12)) +
     ylim(0, 200)
@@ -801,33 +761,10 @@ ggsave(
 results_omni_plot <- results_omni[(results_omni$intersubj_between_outICC == 0.025) &
                                       (results_omni$intrasubj_between_outICC == 0.5) &
                                       (results_omni$out_specific_ICC == 0.05), ]
-base <- ggplot(results_omni_plot,
-               aes(
-                   x = n1.final,
-                   y = n2.final,
-                   color = as.factor(pmp_thresh),
-                   shape = as.factor(pmp_thresh)
-               )) +
-    geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
-    scale_fill_brewer("Set2") + labs(color = "PMP threshold", shape = "PMP threshold") +
-    xlab("Cluster size") + ylab("Number of clusters") +
-    theme(legend.position = "bottom") + ylim(0, (200 + 5))
 
-plot_thres_omni <- base + facet_grid(
-    rows = vars(eff_size2),
-    cols = vars(eff_size1),
-    labeller = labeller(eff_size1 = eff_size1_lab, eff_size2 = eff_size2_lab)
-)
 
 results_omni_plot2 <- results_omni_plot %>%
-    mutate(eff_pair = factor(
-        paste0(
-            "Treatment effect 1: ",
-            eff_size1,
-            "\nTreatment effect 2: ",
-            eff_size2
-        )
-    ))
+    mutate(eff_pair = factor(paste0("d 1: ", eff_size1, "\nd 2: ", eff_size2)))
 
 base2 <- ggplot(
     results_omni_plot2,
@@ -930,12 +867,12 @@ ggsave(
 )
 
 # Effect sizes
-eff_size1_lab <- c("Effect size 1: 0.3", "Effect size 1: 0.6", "Effect size 1: 0.9")
+eff_size1_lab <- c("d 1: 0.3", "d 1: 0.6", "d 1: 0.9")
 names(eff_size1_lab) <- c("0.3", "0.6", "0.9")
-eff_size2_lab <- c("Effect size 2: 0.2", "Effect size 2: 0.5", "Effect size 2: 0.8")
+eff_size2_lab <- c("d 2: 0.2", "d 2: 0.5", "d 2: 0.8")
 names(eff_size2_lab) <- c("0.2", "0.5", "0.8")
 delta_label <- c(paste("\u0394 = 0.2"), paste("\u0394 = 0.3"))
-names(delta_label) <- c( "0.2", "0.3")
+names(delta_label) <- c("0.2", "0.3")
 # results_homoge_plot <- results_homoge[(results_homoge$intersubj_between_outICC == 0.025) &
 #                                           (results_homoge$intrasubj_between_outICC == 0.5) &
 #                                           (results_homoge$pmp_thresh == 0.95) &
@@ -1024,7 +961,8 @@ ggsave(
 results_homoge_plot <- results_homoge[(results_homoge$intersubj_between_outICC ==
                                            0.025) &
                                           (results_homoge$intrasubj_between_outICC ==
-                                               0.5) & (results_homoge$out_specific_ICC == 0.05), ]
+                                               0.5) &
+                                          (results_homoge$out_specific_ICC == 0.05), ]
 base <- ggplot(
     results_homoge_plot,
     aes(
@@ -1132,13 +1070,14 @@ ggsave(
 )
 
 # Effect sizes
-eff_size1_lab <- c("Effect size 1: 0.3", "Effect size 1: 0.5", "Effect size 1:0.7")
+eff_size1_lab <- c("d 1: 0.3", "d 1: 0.5", "d 1:0.7")
 names(eff_size1_lab) <- c("0.3", "0.5", "0.7")
-eff_size2_lab <- c("Effect size 2: 0.5", "Effect size 2: 0.7", "Effect size 2: 0.9")
+eff_size2_lab <- c("d 2: 0.5", "d 2: 0.7", "d 2: 0.9")
 names(eff_size2_lab) <- c("0.5", "0.7", "0.9")
 results_iu_plot <- results_iu[(results_iu$intersubj_between_outICC == 0.025) &
                                   (results_iu$intrasubj_between_outICC ==
-                                       0.5) & (results_iu$pmp_thresh == 0.95) , ]
+                                       0.5) &
+                                  (results_iu$pmp_thresh == 0.95) , ]
 base <- ggplot(results_iu_plot,
                aes(
                    x = n1.final,
@@ -1169,7 +1108,8 @@ ggsave(
 # Thresholds
 results_iu_plot <- results_iu[(results_iu$intersubj_between_outICC == 0.025) &
                                   (results_iu$intrasubj_between_outICC ==
-                                       0.5) & (results_iu$out_specific_ICC == 0.05) , ]
+                                       0.5) &
+                                  (results_iu$out_specific_ICC == 0.05) , ]
 results_iu_plot <- results_iu_plot[results_iu_plot$eff_size2 == 0.9, ]
 base <- ggplot(results_iu_plot,
                aes(
@@ -1239,15 +1179,9 @@ ggsave(
 )
 
 # Effect sizes
-eff_size1_lab <- c("Effect size 1: 0.2",
-                   "Effect size 1: 0.3",
-                   "Effect size 1: 0.5",
-                   "Effect size 1: 0.7")
+eff_size1_lab <- c("d 1: 0.2", "d 1: 0.3", "d 1: 0.5", "d 1: 0.7")
 names(eff_size1_lab) <- c("0.2", "0.3", "0.5", "0.7")
-eff_size2_lab <- c("Effect size 2: 0.3",
-                   "Effect size 2: 0.5",
-                   "Effect size 2: 0.7",
-                   "Effect size 2: 0.9")
+eff_size2_lab <- c("d 2: 0.3", "d 2: 0.5", "d 2: 0.7", "d 2: 0.9")
 names(eff_size2_lab) <- c("0.3", "0.5", "0.7", "0.9")
 results_omni_plot <- results_omni[(results_omni$intersubj_between_outICC ==
                                        0.025) &
@@ -1284,7 +1218,8 @@ ggsave(
 results_omni_plot <- results_omni[(results_omni$intersubj_between_outICC ==
                                        0.025) &
                                       (results_omni$intrasubj_between_outICC ==
-                                           0.5) & (results_omni$out_specific_ICC == 0.05) , ]
+                                           0.5) &
+                                      (results_omni$out_specific_ICC == 0.05) , ]
 results_omni_plot <- results_omni_plot[results_omni_plot$eff_size2 == 0.9, ]
 base <- ggplot(results_omni_plot,
                aes(
@@ -1375,9 +1310,9 @@ ggsave(
 )
 
 # Effect sizes
-eff_size1_lab <- c("Effect size 1: 0.3", "Effect size 1: 0.6", "Effect size 1: 0.9")
+eff_size1_lab <- c("d 1: 0.3", "d 1: 0.6", "d 1: 0.9")
 names(eff_size1_lab) <- c("0.3", "0.6", "0.9")
-eff_size2_lab <- c("Effect size 2: 0.2", "Effect size 2: 0.5", "Effect size 2: 0.8")
+eff_size2_lab <- c("d 2: 0.2", "d 2: 0.5", "d 2: 0.8")
 names(eff_size2_lab) <- c("0.2", "0.5", "0.8")
 results_homoge_plot <- results_homoge[(results_homoge$intersubj_between_outICC == 0.025) &
                                           (results_homoge$intrasubj_between_outICC == 0.5) &
@@ -1415,7 +1350,8 @@ ggsave(
 results_homoge_plot <- results_homoge[(results_homoge$intersubj_between_outICC ==
                                            0.025) &
                                           (results_homoge$intrasubj_between_outICC ==
-                                               0.5) & (results_homoge$out_specific_ICC == 0.05)
+                                               0.5) &
+                                          (results_homoge$out_specific_ICC == 0.05)
                                       &
                                           (results_homoge$delta == 0.3), ]
 results_homoge_plot <- results_homoge_plot[results_homoge_plot$eff_size2 == 0.9, ]
