@@ -531,4 +531,3 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
         }
     } # Finish condition met
 }
-

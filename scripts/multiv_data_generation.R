@@ -61,12 +61,14 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, 
     
     # Scaled effect sizes
     scaled_effects <- effect_sizes * sqrt(marginal_variances)
-    control_means <- 0
+    control_means <- rep(0, length(effect_sizes))
     
     # Objects to save results
     output_multilevel <- vector(mode = "list", length = ndatasets)
     data_list <- vector(mode = "list", length = ndatasets)
-    seeds <- seq(ndatasets) + master.seed
+    set.seed(master.seed)
+    seeds <- sample(2^32/2, ndatasets)
+    
     # Random effects
     for (iteration in seq(ndatasets)) {
         set.seed(seeds[iteration])
@@ -83,7 +85,7 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, 
         my_data <- cbind(id_subj, cluster, condition, y1, y2)
         data_list[[iteration]] <- as.data.frame(my_data)
     }
-    
+
     # Multilevel SEM
     model <- "
     level: 1
@@ -106,7 +108,7 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, 
     var_cov <- Map(extract_var_cov, output_multilevel, list(n_outcomes))
     # Calculate ICCs
     ICCs <- Map(calc_ICCs, output_multilevel, list(n_outcomes))
-
+    
     print("Data generation done!")
     #return(output_multilevel)
     return(list(estimations = fixed_eff, #Vector with unstd. and std intercepts and beta1

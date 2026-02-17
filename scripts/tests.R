@@ -159,7 +159,7 @@ a <- SSD_mult_CRT("homogeneity", effect_sizes = c(0.4, 0.5),
 
 # H1 must be true: the effect sizes are similar
 a <- SSD_mult_CRT("homogeneity",
-                      effect_sizes = c(design_matrix_n2[i, 1], design_matrix_n2[i, 2]),
+                  effect_sizes = c(design_matrix_n2[i, 1], design_matrix_n2[i, 2]),
                   n1 = design_matrix_n2[i, 10],
                   n2 = 26,
                   ndatasets = 100,
@@ -187,21 +187,19 @@ test_random <- round(runif(n = 5, min = 1, max = nrow(design_matrix_n2)))
 results <- vector("list", 5)
 index <- 1
 for (i in test_random) {
-    results[[index]] <- SSD_mult_CRT("homogeneity",
-                                     effect_sizes = c(design_matrix_n2[i, 1], design_matrix_n2[i, 2]),
-                                     n1 = design_matrix_n2[i, 10],
-                                     n2 = 26,
+    results[[index]] <- SSD_mult_CRT(test = design_matrix_n2[5, "test"], 
+                                     effect_sizes = c(design_matrix_n2[5, "eff_size1"], design_matrix_n2[5, "eff_size2"]), 
+                                     n1 = design_matrix_n2[5, "n1"],
+                                     n2 = design_matrix_n2[5, "n2"], 
                                      ndatasets = 100,
-                                     out_specific_ICC = c(design_matrix_n2[i, 4], 0.1),
-                                     intersubj_between_outICC = design_matrix_n2[i, 5],
-                                     intrasubj_between_outICC = design_matrix_n2[i, 6],
-                                     pmp_thresh = design_matrix_n2[i, 7],
-                                     eta = design_matrix_n2[i, 8],
-                                     fixed = as.character(design_matrix_n2[i, 9]),
-                                     difference = design_matrix_n2[i, 3],
-                                     max = 400,
-                                     master.seed = 1629,
-                                     Bayes_pack = "bain")
+                                     out_specific_ICC = c(design_matrix_n2[5, "out_specific_ICC"], 0.1), 
+                                     intersubj_between_outICC = design_matrix_n2[5, "intersubj_between_outICC"], 
+                                     intrasubj_between_outICC = design_matrix_n2[5, "intrasubj_between_outICC"],
+                                     pmp_thresh = design_matrix_n2[5, "pmp_thresh"], eta = design_matrix_n2[5, "eta"], 
+                                     fixed = as.character(design_matrix_n2[5, "fixed"]), max = 500, 
+                                     Bayes_pack = as.character(design_matrix_n2[5, "Bayes_pack"]),
+                                     master.seed = design_matrix_n2[5, "seed"],
+                                     difference = design_matrix_n2[5, "delta"])
     index <- index + 1
 }
 # Data generation ---------------------------------------------------------------
@@ -220,20 +218,18 @@ results <- vector("list", 5)
 
 ## Serial
 a <- SSD_mult_CRT("omnibus",
-                  effect_sizes = c(design_matrix_n2[i, 1], design_matrix_n2[i, 2]),
-                  n1 = design_matrix_n2[i, 10],
-                  n2 = 26,
+                  test = design_matrix_n2[5, "test"], 
+                  effect_sizes = c(design_matrix_n2[5, "eff_size1"], design_matrix_n2[5, "eff_size2"]), 
+                  n1 = design_matrix_n2[5, "n1"],
+                  n2 = design_matrix_n2[5, "n2"], 
                   ndatasets = 100,
-                  out_specific_ICC = c(design_matrix_n2[i, 4], 0.1),
-                  intersubj_between_outICC = design_matrix_n2[i, 5],
-                  intrasubj_between_outICC = design_matrix_n2[i, 6],
-                  pmp_thresh = design_matrix_n2[i, 7],
-                  eta = design_matrix_n2[i, 8],
-                  fixed = as.character(design_matrix_n2[i, 9]),
-                  difference = design_matrix_n2[i, 3],
-                  max = 100,
-                  master.seed = 1629,
-                  Bayes_pack = "bain")
+                  out_specific_ICC = c(design_matrix_n2[5, "out_specific_ICC"], 0.1), 
+                  intersubj_between_outICC = design_matrix_n2[5, "intersubj_between_outICC"], 
+                  intrasubj_between_outICC = design_matrix_n2[5, "intrasubj_between_outICC"],
+                  pmp_thresh = design_matrix_n2[5, "pmp_thresh"], eta = design_matrix_n2[5, "eta"], 
+                  fixed = as.character(design_matrix_n2[5, "fixed"]), max = 500, 
+                  Bayes_pack = as.character(design_matrix_n2[5, "Bayes_pack"]),
+                  master.seed = design_matrix_n2[5, "seed"])
 
 ## Parallel
 index <- 1

@@ -100,7 +100,7 @@ BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, dif
                 Bf31 <- Bf3u / Bf1u
                 Bf3c <- Bf$fit$BF.c[3]
                 PMP3c <- Bf$fit$PMPc[3]
-
+                
             } else if (test == "omnibus") {
                 Bfcu <- Bf$fit$Fit[5] / Bf$fit$Com[5] 
                 Bfc1 <- 1/Bf$fit$BF.c[1] #1/BF1c
@@ -170,7 +170,7 @@ BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, dif
             }
         }
     }
-
+    
     if (test == "intersection-union") {
         results <- list(BF.1u = Bf1u, BF.2u = Bf2u, BF.3u = Bf3u,  BF.cu = Bfcu,
                         BF.12 = Bf12, BF.13 = Bf13, 

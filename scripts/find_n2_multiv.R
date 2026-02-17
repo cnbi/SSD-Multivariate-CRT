@@ -135,6 +135,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
             ## Proportion-----------------------
             prop_PMP1 <- length(which(results_H1[, "PMP.1c"] > pmp_thresh)) / ndatasets
             message("empirical eta H1: ", prop_PMP1)
+            message("n2: ", n2)
+            message("n1: ", n1)
             ## Evaluation of power criteria-----
             condition_met_H1 <- ifelse(prop_PMP1 > eta, TRUE, FALSE)
             ## Increases sample size if condition is not met
@@ -148,7 +150,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                             min_sample = min_sample)
             list2env(updated_sample, environment())
             if (!condition_met_H1) {
-                next
+                if (!n2 == max) {
+                    next
+                }
             }
             
             # If H2 is true-----------
@@ -189,7 +193,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                             min_sample = min_sample)
             list2env(updated_sample, environment())
             if (!condition_met_H2) {
-                next
+                if (!n2 == max) {
+                    next
+                }
             }
             
             # If H3 is true-----------
@@ -228,7 +234,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                             min_sample = min_sample)
             list2env(updated_sample, environment())
             if (!condition_met_H3) {
-                next
+                if (!n2 == max) {
+                    next
+                }
             }
             
             # If H4 is true------------------------------
@@ -278,7 +286,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                     " Previous eta: ", updated_sample$previous_eta)
             list2env(updated_sample, environment())
             if (!condition_met_H4) {
-                next
+                if (!n2 == max) {
+                    next
+                }
             }
             
         } else if (test == "homogeneity") {
@@ -382,7 +392,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                     " Previous eta: ", updated_sample$previous_eta)
             list2env(updated_sample, environment())
             if (!condition_met_H2) {
-                next
+                if (!n2 == max) {
+                    next
+                }
             }
         } else if (test == "omnibus") {
             # Omnibus-----------------------------------------
@@ -426,7 +438,10 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                             min_sample = min_sample)
             list2env(updated_sample, environment())
             if (!condition_met_H1) {
-                next
+                if (!n2 == max) {
+                    next
+                }
+                
             }
             
             # If H2 is true-----------
@@ -470,7 +485,9 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                             min_sample = min_sample)
             list2env(updated_sample, environment())
             if (!condition_met_H2) {
-                next
+                if (!n2 == max) {
+                    next
+                }
             }
             
             # If H3 is true-----------
@@ -512,7 +529,10 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                             min_sample = min_sample)
             list2env(updated_sample, environment())
             if (!condition_met_H3) {
-                next
+                if (!n2 == max){
+                    next
+                }
+                
             }
             
             # If H4 is true------------------------------

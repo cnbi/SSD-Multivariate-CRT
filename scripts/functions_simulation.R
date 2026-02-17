@@ -4,7 +4,7 @@
 # simulation function for second project
 # name_results: characters. Name which will be use fo saving results
 # name_times: characters. Name which will be use fo saving time results
-run_simulation <- function(Row, name_results, name_times, design_matrix, results_folder, seed){
+run_simulation <- function(Row, name_results, name_times, design_matrix, results_folder){
     # Start time
     start_time <- Sys.time()
     
@@ -20,8 +20,8 @@ run_simulation <- function(Row, name_results, name_times, design_matrix, results
                                 pmp_thresh = design_matrix[Row, "pmp_thresh"], eta = design_matrix[Row, "eta"], 
                                 fixed = as.character(design_matrix[Row, "fixed"]), max = 500, 
                                 Bayes_pack = as.character(design_matrix[Row, "Bayes_pack"]),
-                                master.seed = as.integer(seed),
-                                difference = design_matrix_n2[Row, "delta"]) # This is only for homogeneity
+                                master.seed = design_matrix[Row, "seed"],
+                                difference = design_matrix[Row, "delta"]) # This is only for homogeneity
     
     # Save results
     end_time <- Sys.time()
@@ -36,6 +36,7 @@ run_simulation <- function(Row, name_results, name_times, design_matrix, results
     # Clean
     rm(ssd_results)
     gc()
+    return(NULL)
 }
 
 # Simulation parallelised
@@ -56,7 +57,6 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
     nrow_design <- nrow(design_matrix)
     name_res <- required_fx[1]
     name_t <- required_fx[2]
-    seed <- as.integer(required_fx[3])
     
     if (parall == "Parallel") {
         # Detect
@@ -127,7 +127,7 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
 
 # Collect results in a matrix---------------------------------------------
 collect_results <- function(design_matrix, results_folder, finding, name_results, test,
-                            file_name, rows) {
+                            file_name, rows, save = TRUE) {
     if (missing(rows)) {
         rows <- seq(nrow(design_matrix))
     }
@@ -195,10 +195,14 @@ collect_results <- function(design_matrix, results_folder, finding, name_results
                                   "PMP.H4", "n2.final", "n1.final")
         
     } else if (test == "homogeneity") {
+
         new_matrix <- matrix(NA, nrow = nrow(design_matrix), ncol = 10)
+       
+        
         # Extract results
         for (row_design in rows) {
             stored_result <- readRDS(paste0(results_folder, results_name, row_design, ".RDS"))
+
             n2 <- stored_result$n2
             n1 <- stored_result$n1
             median.BF1c <- median(stored_result$data$results_H1[, "BF.1c"])
@@ -266,13 +270,15 @@ collect_results <- function(design_matrix, results_folder, finding, name_results
     }
     
     # save results and return
-    saveRDS(new_matrix, file = file.path(results_folder, paste0(file_name, ".RDS")))
+    if (save == TRUE) {
+        saveRDS(new_matrix, file = file.path(results_folder, paste0(file_name, ".RDS")))
+    }
     return(new_matrix)
 }
 
 # Collect times in a matrix ----
 collect_times <- function(design_matrix, results_folder, finding, name_results, test,
-                          file_name, rows) {
+                          file_name, rows, save = TRUE) {
     if (missing(rows)) {
         rows <- seq(nrow(design_matrix))
     }
@@ -291,7 +297,49 @@ collect_times <- function(design_matrix, results_folder, finding, name_results, 
     }
     new_matrix <- as.data.frame(cbind(design_matrix, new_matrix))
     colnames(new_matrix) <- c(names(design_matrix), "total.time")
-    saveRDS(new_matrix, file = file.path(results_folder, paste0(file_name, ".RDS")))
+    if (save == TRUE) { 
+        saveRDS(new_matrix, file = file.path(results_folder, paste0(file_name, ".RDS")))
+        }
     
     return(new_matrix)
+}
+
+# Check simulation--------------------
+library(tools)
+missing_rows <- function(folder_path,
+                         name_pattern = NULL,
+                         check_numbers,
+                         underscore = TRUE) {
+    files_names <- list.files(folder_path)
+    
+    # Filter by name pattern
+    if (!is.null(name_pattern)) {
+        filtered_names <- files_names[grep(name_pattern, files_names)]
+    }
+    
+    # Extract the number of row
+    if (underscore) {
+        row_numbers <- sapply(filtered_names, function(names){
+            parts <- unlist(strsplit(names, "_"))
+            number <- parts[length(parts)]
+            
+            # Remove extension
+            number_only <- sub("\\.[^.]+$", "", number)
+            return(number_only)
+        })   
+    } else if (underscore == FALSE) {
+        
+        row_numbers <- sapply(filtered_names, function(names){
+            # Remove extension
+            name_no_ext <- file_path_sans_ext(names)
+            
+            number <- regmatches(name_no_ext, gregexpr("\\d+$", name_no_ext))[[1]]
+            
+            return(number)
+        })
+    }
+    
+    
+    difference <- setdiff(check_numbers, row_numbers)
+    print(difference)
 }
