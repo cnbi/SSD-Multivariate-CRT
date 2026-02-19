@@ -378,7 +378,7 @@ application_omni <- application_omni[which(complete.cases(application_omni == TR
 application_homog <- application_homog[which(complete.cases(application_homog == TRUE)), ]
 application_iu <- application_iu[which(complete.cases(application_iu == TRUE)), ]
 
-application_omni[which(application_omni$eff_1 == 0.2 & (application_omni$eff_2 == 0.2 | application_omni$eff_2 == 0.3)), ]
-application_homog[which(application_homog$eff_1 == 0.2 & (application_homog$eff_2 == 0.2 | application_homog$eff_2 == 0.3)), ]
-application_iu[which(application_iu$eff_1 == 0.2 & (application_iu$eff_2 == 0.2 | application_iu$eff_2 == 0.3)), ]
+application_omni[which((application_omni$eff_1 == 0.2  | application_omni$eff_1 == 0.3) & application_omni$eff_2 == 0.2), ]
+application_homog[which((application_homog$eff_1 == 0.2 | application_homog$eff_1 == 0.3) & application_homog$eff_2 == 0.2), ]
+application_iu[which((application_iu$eff_1 == 0.2 | application_iu$eff_1 == 0.3) & application_iu$eff_2 == 0.2 ), ]
 
