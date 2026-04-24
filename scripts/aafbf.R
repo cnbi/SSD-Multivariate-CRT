@@ -88,7 +88,7 @@ BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, dif
             
             if (test == "intersection-union") {
                 Bfcu <- Bf$fit$Fit[5] / Bf$fit$Com[5] 
-                Bfc1 <- 1/Bf$fit$BF.c[1] #1/BF1c
+                Bfc1 <- 1/Bf$fit$BF.c[1] # 1/BF1c
                 PMPc <- Bf$fit$PMPc[5]
                 Bf2u <- Bf$fit$Fit[2] / Bf$fit$Com[2]
                 Bf12 <- Bf1u / Bf2u
@@ -120,22 +120,9 @@ BF_multiv <- function(estimates, sigma, effective_n, hypotheses, pack, test, dif
                 PMPc <- Bf$fit$PMPc[3]
             }
             
-        } else {
-            # Using my own code
-            # # Complexities
-            # complexity_h1 <- 1 - pmvnorm(lower = c(0, 0), upper = c(Inf, Inf), mean = c(0, 0), sd = sqrt(sigma[[2]] / b_calc))
-            # 
-            # # Fit
-            # fit_h1 <- 1 - pmvnorm(lower = c(0, 0), upper = c(Inf, Inf), mean = estimates, sigma = sigma) # i could include lower as an argument that can be changed
-            # fit_hc <- pmvnorm(lower = c(-Inf, -Inf), upper = c(0, 0), mean = estimates, sigma = sigma)
-            # 
-            # # Calculation of BFs
-            # 
-            # 
-            # # Calculataion of PMPs
         }
         if (test == "intersection-union") {
-            
+            print("Bayes factor function loop")
             if (any(is.na(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf13, Bf31)))) {
                 good_result <- FALSE
             } else if (any(is.nan(c(Bf1u, Bf1c, Bf2u, Bf2c, Bf12, Bf21, Bf3u, Bf13, Bf31)))) {

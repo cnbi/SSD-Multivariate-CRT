@@ -43,7 +43,7 @@ round2 <- function(number, decimals = 0) {
 
 # Extract effect sizes -----------------------------------
 #
-extract_fix_eff <- function(data, n_outcomes){
+extract_fix_eff_sem <- function(data, n_outcomes){
     if (n_outcomes == 2) {
         # Extract treatment effect
         est_beta1 <- lavaan::lavInspect(data, "est")$cluster$beta[1:2, 3]
@@ -82,7 +82,7 @@ extract_fix_eff <- function(data, n_outcomes){
 
 # Extract variance-covariance matrix --------------------------------------------
 #
-extract_var_cov <- function(lavaan_output, n_outcomes) {
+extract_var_cov_sem <- function(lavaan_output, n_outcomes) {
     if (n_outcomes == 2) {
         var_cov_matrix <- lavaan::lavInspect(lavaan_output, "vcov")[4:5, 4:5]
     } else if (n_outcomes == 3) {
@@ -106,7 +106,7 @@ extract_var_cov_st <- function(lavaan_output, n_outcomes) {
 
 # Calculate empirical ICCs ---------------------------------
 # lavaan object
-calc_ICCs <- function(lavaan_output, n_outcomes) {
+calc_ICCs_sem <- function(lavaan_output, n_outcomes) {
     emp_rho0 <- vector(mode = "numeric", length = n_outcomes)  # Empirical Outcome-specific ICC
     emp_rho1 <- matrix(NA, n_outcomes, n_outcomes)  # Empirical intersubject between-outcome ICC
     emp_rho2 <- matrix(NA, n_outcomes, n_outcomes)  # Empirical intrasubject between-outcome ICC
@@ -530,4 +530,78 @@ final_binary_search <- function(condition_met, test, fixed, n1, n2, low, high, m
             }
         }
     } # Finish condition met
+}
+
+# convert to long data format------------
+long_data <- function(data, outc1, outc2) {
+    output <- data %>%
+        pivot_longer(
+            cols = c(outc1, outc2),
+            names_to = "outcome",
+            values_to = "value"
+        ) %>%
+        mutate(
+            outcome_fac = factor(outcome),
+            outcome_num = as.numeric(outcome_fac)
+        )
+    return(output)
+}
+
+# multilevel with nlme--------------
+lme_function <- function(long_data) {
+    output_multilevel <- lme(value ~ 0 + outcome_fac + outcome_fac:condition,
+                             # Random intercept
+                             random = list(cluster = pdSymm(~ outcome_fac - 1)),
+                             # Correlation of observations within the clusters and within the same subject
+                             correlation = corSymm(form = ~ outcome_num | cluster/id_subj),
+                             # Variance of residuals per outcome
+                             weights = varIdent(form = ~ 1 | outcome_fac),
+                             data = long_data,
+                             control = lmeControl(opt = "optim", msMaxIter = 1000)
+    )
+    return(output_multilevel)
+}
+
+# ICCs for nlme ------------------
+ICCs_nlme <- function(multilevel_object, n_outcomes) {
+    emp_rho1 <- matrix(NA, n_outcomes, n_outcomes)  # Empirical intersubject between-outcome ICC
+    emp_rho2 <- matrix(NA, n_outcomes, n_outcomes)  # Empirical intrasubject between-outcome ICC
+    
+    # Variance-covariance matrix of random effects
+    var_random_eff <- getVarCov(multilevel_object)
+    
+    # Elements for ICCs
+    ## y1
+    var_u0_y1 <- var_random_eff[1, 1]
+    var_e_y1 <- unname(as.numeric(VarCorr(multilevel_object)[3, 1]) * coef(multilevel_object$modelStruct$varStruct, unconstrained = FALSE)**2)
+    total_var_y1 <- var_u0_y1 + var_e_y1
+    ## y2
+    var_u0_y2 <- var_random_eff[2, 2]
+    var_e_y2 <- as.numeric(VarCorr(multilevel_object)[3, 1])
+    total_var_y2 <- var_u0_y2 + var_e_y2
+    # Both outcomes
+    cov_u0 <- var_random_eff[1, 2]
+    corr_e <- coef(multilevel_object$modelStruct$corStruct, unconstrained = FALSE)
+    cov_e <- corr_e * sqrt(var_e_y1 * var_e_y2)
+    ### ICCs
+    # y2
+    rho0_y2 <- var_u0_y2 / total_var_y2
+    # y1
+    rho0_y1 <- var_u0_y1 / total_var_y1
+    rho1 <- cov_u0 / sqrt(total_var_y1 * total_var_y2)
+    rho2 <- (cov_u0 + cov_e) / sqrt(total_var_y1 * total_var_y2)
+    
+    # Intersubject between-outcome ICC and Intrasubject between-outcome ICC
+    for (y in 1:(n_outcomes - 1)) {
+        for (y_prime in (y + 1):n_outcomes) {
+            emp_rho1[y, y_prime] <- rho1
+            emp_rho1[y_prime, y] <- rho1
+            emp_rho2[y, y_prime] <- rho2
+            emp_rho2[y_prime, y] <- rho2
+        }
+    }
+    
+    return(list(emp_rho0 = c("y1" = rho0_y1, "y2" = rho0_y2),
+                emp_rho1 = rho1,
+                emp_rho2 = rho2))
 }

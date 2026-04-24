@@ -127,7 +127,7 @@ simulation_parallelised <- function(design_matrix, folder, nclusters, parall,
 
 # Collect results in a matrix---------------------------------------------
 collect_results <- function(design_matrix, results_folder, finding, name_results, test,
-                            file_name, rows, save = TRUE) {
+                            file_name, rows, save) {
     if (missing(rows)) {
         rows <- seq(nrow(design_matrix))
     }
@@ -195,14 +195,10 @@ collect_results <- function(design_matrix, results_folder, finding, name_results
                                   "PMP.H4", "n2.final", "n1.final")
         
     } else if (test == "homogeneity") {
-
         new_matrix <- matrix(NA, nrow = nrow(design_matrix), ncol = 10)
-       
-        
         # Extract results
         for (row_design in rows) {
             stored_result <- readRDS(paste0(results_folder, results_name, row_design, ".RDS"))
-
             n2 <- stored_result$n2
             n1 <- stored_result$n1
             median.BF1c <- median(stored_result$data$results_H1[, "BF.1c"])
@@ -273,12 +269,13 @@ collect_results <- function(design_matrix, results_folder, finding, name_results
     if (save == TRUE) {
         saveRDS(new_matrix, file = file.path(results_folder, paste0(file_name, ".RDS")))
     }
+    
     return(new_matrix)
 }
 
 # Collect times in a matrix ----
 collect_times <- function(design_matrix, results_folder, finding, name_results, test,
-                          file_name, rows, save = TRUE) {
+                          file_name, rows) {
     if (missing(rows)) {
         rows <- seq(nrow(design_matrix))
     }
@@ -297,9 +294,7 @@ collect_times <- function(design_matrix, results_folder, finding, name_results, 
     }
     new_matrix <- as.data.frame(cbind(design_matrix, new_matrix))
     colnames(new_matrix) <- c(names(design_matrix), "total.time")
-    if (save == TRUE) { 
-        saveRDS(new_matrix, file = file.path(results_folder, paste0(file_name, ".RDS")))
-        }
+    saveRDS(new_matrix, file = file.path(results_folder, paste0(file_name, ".RDS")))
     
     return(new_matrix)
 }
@@ -342,4 +337,150 @@ missing_rows <- function(folder_path,
     
     difference <- setdiff(check_numbers, row_numbers)
     print(difference)
+}
+
+# Collect results for plots ==========================
+
+collect_results_pl <- function(design_matrix, results_folder, finding, name_results, test,
+                            file_name, rows, save, ndatasets) {
+    if (missing(rows)) {
+        rows <- seq(nrow(design_matrix))
+    }
+    if (finding == "N2") {
+        results_name <- ifelse(missing(name_results), "/ResultsN2Row", paste0("/", name_results))
+    } else if (finding == "N1") {
+        results_name <- ifelse(missing(name_results), "/ResultsN1Row", paste0("/", name_results))
+    }
+    
+    if (test == "omnibus") {
+        new_matrix <- matrix(NA, ncol = 16, nrow = (nrow(design_matrix)*ndatasets))
+        # extract results
+        for (row_design in rows) {
+            stored_result <- readRDS(paste0(results_folder, results_name, row_design, ".RDS"))
+            n2 <- stored_result$n2
+            n1 <- stored_result$n1
+            BF1u <- stored_result$data$results_H1[, "BF.1u"]
+            PMP1.H1 <- stored_result$data$results_H1[, "PMP.1"]
+            BF2u <- stored_result$data$results_H2[, "BF.2u"]
+            PMP2.H2 <- stored_result$data$results_H2[, "PMP.2"]
+            BF3u <- stored_result$data$results_H3[, "BF.3u"]
+            PMP3.H3 <- stored_result$data$results_H3[, "PMP.3"]
+            BF4u <- stored_result$data$results_H4[, "BF.4u"]
+            # combined.PMP.H1 <- mean(stored_result$Combined.PMP.H1)
+            # combined.PMP.H2 <- mean(stored_result$Combined.PMP.H2)
+            # combined.PMP.H3 <- mean(stored_result$Combined.PMP.H3)
+            PMP.H4 <- stored_result$PMP.H4
+            
+            new_data <- cbind(BF1u, PMP1.H1, BF2u,
+                              PMP2.H2, BF3u, PMP3.H3,
+                              BF4u, PMP.H4,
+                              n1, n2)
+            new_matrix[(1 + (ndatasets*(row_design - 1))):(ndatasets*row_design), 7:16] <- new_data
+        }
+        # create final data frame
+        new_design_matrix <- design_matrix[, c("eff_size1",  "eff_size2", 
+                                               "out_specific_ICC", "intersubj_between_outICC",
+                                               "intrasubj_between_outICC", "pmp_thresh")]
+        
+        new_matrix[, 1:6] <- new_design_matrix %>% slice(rep(1:n(), each = ndatasets)) %>% 
+            as.matrix()
+        colnames(new_matrix) <- c("eff_size1",  "eff_size2", 
+                                  "out_specific_ICC", "intersubj_between_outICC",
+                                  "intrasubj_between_outICC", "pmp_thresh",
+                                  "BF.1u", "PMP.1",
+                                  "BF.2u", 
+                                  "PMP.2", "BF.3u", "PMP.3", 
+                                  "BF.4u", "PMP.4", "n1.final", "n2.final")
+        new_matrix <- as.data.frame(new_matrix) %>% 
+            pivot_longer(
+                cols = c( "BF.1u", "PMP.1", "BF.2u", "PMP.2", "BF.3u", "PMP.3", 
+                          "BF.4u", "PMP.4"),
+                names_to = c(".value", "hypothesis"), 
+                names_pattern = "(BF|PMP)\\.(\\d)"
+            )
+        
+    } else if (test == "homogeneity") {
+        new_matrix <- matrix(NA, nrow = nrow(design_matrix)*ndatasets, ncol = 13)
+        # Extract results
+        for (row_design in rows) {
+            stored_result <- readRDS(paste0(results_folder, results_name, row_design, ".RDS"))
+            n2 <- stored_result$n2
+            n1 <- stored_result$n1
+            BF1c <- stored_result$data$results_H1[, "BF.1c"]
+            BFc1 <- stored_result$data$results_H2[, "BF.2c"]
+            PMP1 <- stored_result$data$results_H1[, "PMP.1"]
+            PMP2 <- stored_result$data$results_H2[, "PMP.2"]
+            new_data <- cbind(BF1c, BFc1,
+                          PMP1, PMP2,
+                          n1, n2)
+            new_matrix[(1 + (ndatasets * (row_design - 1))):(ndatasets*row_design), 8:13] <- new_data
+        }
+        
+        # create final data frame
+        new_design_matrix <- design_matrix[, c("eff_size1",  "eff_size2", 
+                                               "out_specific_ICC", "intersubj_between_outICC",
+                                               "intrasubj_between_outICC", "pmp_thresh",
+                                               "delta")]
+        new_matrix[, 1:7] <- new_design_matrix %>% slice(rep(1:n(), each = ndatasets)) %>% as.matrix()
+        colnames(new_matrix) <- c("eff_size1",  "eff_size2", 
+                                   "out_specific_ICC", "intersubj_between_outICC",
+                                   "intrasubj_between_outICC", "pmp_thresh",
+                                   "delta", "BF1", "BF2",
+                                          "PMP1", "PMP2", "n1.final", "n2.final")
+        
+        new_matrix <- as.data.frame(new_matrix) %>% 
+            pivot_longer(
+                cols = c("BF1", "BF2", "PMP1", "PMP2"),
+                names_to = c(".value", "hypothesis"), 
+                names_pattern = "(BF|PMP)(\\d)"
+            )
+        
+    } else if (test == "intersection-union") {
+        new_matrix <- matrix(NA, ncol = 16, nrow = nrow(design_matrix)*ndatasets)
+        # extract results
+        for (row_design in rows) {
+            stored_result <- readRDS(paste0(results_folder, results_name, row_design, ".RDS"))
+            n2 <- stored_result$n2
+            n1 <- stored_result$n1
+            BF1u <- stored_result$data$results_H1[, "BF.1u"]
+            PMP1.H1 <- stored_result$data$results_H1[, "PMP.1c"]
+            BF2u <- stored_result$data$results_H2[, "BF.2u"]
+            PMP2.H2 <- stored_result$data$results_H2[, "PMP.2c"]
+            BF3u <- stored_result$data$results_H3[, "BF.3u"]
+            PMP3.H3 <- stored_result$data$results_H3[, "PMP.3c"]
+            BF4u <- stored_result$data$results_H4[, "BF.4u"]
+            PMP.H4 <- stored_result$data$results_H4[, "PMP.c"]
+            new_matrix[(1 + (ndatasets*(row_design - 1))):(ndatasets*row_design), 7:16] <- cbind(BF1u, PMP1.H1, BF2u,
+                                                                                             PMP2.H2, BF3u, PMP3.H3,
+                                                                                             BF4u, PMP.H4,
+                                                                                             n1, n2)
+        }
+        # create final data frame
+        new_design_matrix <- design_matrix[, c("eff_size1",  "eff_size2", 
+                                               "out_specific_ICC", "intersubj_between_outICC",
+                                               "intrasubj_between_outICC", "pmp_thresh")]
+        new_matrix[, 1:6] <- new_design_matrix %>% slice(rep(1:n(), each = ndatasets)) %>% 
+            as.matrix()
+        colnames(new_matrix) <- c("eff_size1",  "eff_size2", 
+                                  "out_specific_ICC", "intersubj_between_outICC",
+                                  "intrasubj_between_outICC", "pmp_thresh",
+                                  "BF.1u", "PMP.1",
+                                  "BF.2u", 
+                                  "PMP.2", "BF.3u", "PMP.3", 
+                                  "BF.4u", "PMP.4", "n1.final", "n2.final")
+        new_matrix <- as.data.frame(new_matrix) %>% 
+            pivot_longer(
+                cols = c( "BF.1u", "PMP.1", "BF.2u", "PMP.2", "BF.3u", "PMP.3", 
+                          "BF.4u", "PMP.4"),
+                names_to = c(".value", "hypothesis"), 
+                names_pattern = "(BF|PMP)\\.(\\d)"
+            )
+    }
+    
+    # save results and return
+    if (save == TRUE) {
+        saveRDS(new_matrix, file = file.path(results_folder, paste0(file_name, ".RDS")))
+    }
+    
+    return(new_matrix)
 }

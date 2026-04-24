@@ -11,7 +11,8 @@
 # TODO: The following code only works for n_outcomes =  2
 
 gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, intersubj_between_outICC, 
-                            intrasubj_between_outICC, n_outcomes, master.seed, homogeneity = FALSE){
+                            intrasubj_between_outICC, n_outcomes, master.seed, homogeneity = FALSE,
+                            nlme_package){
     
     if (homogeneity == TRUE) {
         marginal_variances <- c(30, 30)
@@ -85,9 +86,11 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, 
         my_data <- cbind(id_subj, cluster, condition, y1, y2)
         data_list[[iteration]] <- as.data.frame(my_data)
     }
+    
 
     # Multilevel SEM
-    model <- "
+    if (nlme_package == FALSE) {
+        model <- "
     level: 1
     y1 ~~ y2
     
@@ -95,19 +98,32 @@ gen_multiv_data <- function(ndatasets, n1, n2, effect_sizes, out_specific_ICCs, 
     y1 + y2 ~ condition
     y1 ~~ y2
     "
-    
-    # output_multilevel <- semList(model = model, dataList = data_list, cluster = "cluster", 
-    #                       store.failed = TRUE, iseed = seed, show.progress = TRUE)
-    
-    output_multilevel <- Map(lavaan::sem, model = list(model), data = data_list, cluster = "cluster")
-    
-    #I can use clusterApply for a parallel version
-    
-    # Extract info
-    fixed_eff <- Map(extract_fix_eff, output_multilevel, list(n_outcomes))
-    var_cov <- Map(extract_var_cov, output_multilevel, list(n_outcomes))
-    # Calculate ICCs
-    ICCs <- Map(calc_ICCs, output_multilevel, list(n_outcomes))
+        
+        # output_multilevel <- semList(model = model, dataList = data_list, cluster = "cluster", 
+        #                       store.failed = TRUE, iseed = seed, show.progress = TRUE)
+        
+        output_multilevel <- Map(lavaan::sem, model = list(model), data = data_list, cluster = "cluster")
+        
+        #I can use clusterApply for a parallel version
+        
+        # Extract info
+        fixed_eff <- Map(extract_fix_eff_sem, output_multilevel, list(n_outcomes))
+        var_cov <- Map(extract_var_cov_sem, output_multilevel, list(n_outcomes))
+        # Calculate ICCs
+        ICCs <- Map(calc_ICCs_sem, output_multilevel, list(n_outcomes))
+        
+    } else {
+        # Convert to large format
+        list_long_data <- Map(long_data, y1, y2)
+        # Fit model
+        output_multilevel <- Map(lme_function, list_long_data)
+        # Extract fixed effects
+        fixed_eff <- Map(fixed.effects, output_multilevel)
+        # Extract variance-covariance matrix
+        var_cov <-  Map(vcov, output_multilevel)
+        # ICCs
+        ICCs <- Map(ICCs_nlme, output_multilevel, list(n_outcomes))
+    }
     
     print("Data generation done!")
     #return(output_multilevel)

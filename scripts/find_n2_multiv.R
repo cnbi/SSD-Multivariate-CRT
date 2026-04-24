@@ -13,9 +13,10 @@
 SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000, out_specific_ICCs, 
                          intersubj_between_outICC, intrasubj_between_outICC,
                          pmp_thresh = 0.9, eta = 0.8, fixed = "n1", difference = 0.2, max,
-                         master.seed, Bayes_pack) {
+                         master.seed, Bayes_pack, nlme_package = FALSE) {
     # Libraries
-    required_packages <- c("MASS", "dplyr", "numDeriv", "stringr", "stargazer", "lavaan")
+    required_packages <- c("MASS", "dplyr", "numDeriv", "stringr", "stargazer", "lavaan", "nlme",
+                           "tidyr")
     if (Bayes_pack == "bain") {
         required_packages <-  c(required_packages, "bain")
     } else if (Bayes_pack == "BFpack") {
@@ -115,7 +116,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      out_specific_ICCs,
                                                      intersubj_between_outICC,
                                                      intrasubj_between_outICC,
-                                                     n_outcomes, master.seed))
+                                                     n_outcomes, master.seed, nlme_package))
             
             ## Effective sample size-----------
             effective_nH1 <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes))
@@ -161,7 +162,7 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
-                                                     n_outcomes, master.seed))
+                                                     n_outcomes, master.seed, nlme_package))
             
             ## Effective sample size-----------
             effective_nH2 <- Map(effective_sample, list(n1), list(n2), data_H2$ICCs, list(n_outcomes))
@@ -204,7 +205,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
-                                                     n_outcomes, master.seed))
+                                                     n_outcomes, master.seed,
+                                                     nlme_package))
             ## Effective sample size-------------
             effective_nH3 <- Map(effective_sample, list(n1), list(n2), data_H3$ICCs, list(n_outcomes))
             effective_nH3 <- Map(min, effective_nH3)
@@ -245,7 +247,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
-                                                     n_outcomes, master.seed))
+                                                     n_outcomes, master.seed,
+                                                     nlme_package))
             
             ##Effective sample size---------------------
             effective_nH4 <- Map(effective_sample, list(n1), list(n2), data_H4$ICCs, list(n_outcomes))
@@ -300,7 +303,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      intersubj_between_outICC,
                                                      intrasubj_between_outICC,
                                                      n_outcomes, master.seed,
-                                                     homogeneity = TRUE))
+                                                     homogeneity = TRUE,
+                                                     nlme_package))
             
             ## Effective sample size-----------
             effective_nH1 <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes))
@@ -352,7 +356,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
                                                      n_outcomes, master.seed,
-                                                     homogeneity = TRUE))
+                                                     homogeneity = TRUE,
+                                                     nlme_package))
             
             ## Effective sample size-----------
             effective_nH2 <- Map(effective_sample, list(n1), list(n2), data_H2$ICCs, list(n_outcomes))
@@ -404,7 +409,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      out_specific_ICCs,
                                                      intersubj_between_outICC,
                                                      intrasubj_between_outICC,
-                                                     n_outcomes, master.seed))
+                                                     n_outcomes, master.seed,
+                                                     nlme_package))
             
             ## Effective sample size-----------
             effective_nH1 <- Map(effective_sample, list(n1), list(n2), data_H1$ICCs, list(n_outcomes))
@@ -450,7 +456,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
-                                                     n_outcomes, master.seed))
+                                                     n_outcomes, master.seed,
+                                                     nlme_package))
             
             ## Effective sample size-----------
             effective_nH2 <- Map(effective_sample, list(n1), list(n2), data_H2$ICCs, list(n_outcomes))
@@ -496,7 +503,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
-                                                     n_outcomes, master.seed))
+                                                     n_outcomes, master.seed,
+                                                     nlme_package))
             ## Effective sample size-------------
             effective_nH3 <- Map(effective_sample, list(n1), list(n2), data_H3$ICCs, list(n_outcomes))
             effective_nH3 <- Map(min, effective_nH3)
@@ -541,7 +549,8 @@ SSD_mult_CRT <- function(test, effect_sizes, n1 = 15, n2 = 30, ndatasets = 1000,
                                                      out_specific_ICCs, 
                                                      intersubj_between_outICC, 
                                                      intrasubj_between_outICC,
-                                                     n_outcomes, master.seed))
+                                                     n_outcomes, master.seed,
+                                                     nlme_package))
             
             ##Effective sample size---------------------
             effective_nH4 <- Map(effective_sample, list(n1), list(n2), data_H4$ICCs, list(n_outcomes))

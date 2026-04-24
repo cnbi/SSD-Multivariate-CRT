@@ -2,7 +2,6 @@
 # Library
 library(nanoparquet)
 library(tidyverse)
-
 # Simulation for intersection-union test------------------------------------------
 ## Design matrix-----------------------------------------------------------------
 # General factors
@@ -55,6 +54,7 @@ effect_sizes  <- matrix(rep(t(effect_sizes), nrow(design_matrix_n2)),
                         byrow = TRUE)
 effect_sizes <- effect_sizes[order(effect_sizes[, 1], effect_sizes[, 2]), ]
 design_matrix_n2 <- cbind.data.frame(effect_sizes, design_matrix_n2)
+design_matrix_n2 <- mutate(design_matrix_n2, seed = as.integer(sample(2^32/2, n())))
 colnames(design_matrix_n2) <- c(
   "eff_size1",
   "eff_size2",
@@ -67,9 +67,10 @@ colnames(design_matrix_n2) <- c(
   "n1",
   "n2",
   "test",
-  "Bayes_pack"
+  "Bayes_pack",
+  "seed"
 )
-
+write_parquet(design_matrix_n2, "design_matrix_iu")
 # Finding cluster size
 n2 <- c(10, 40, 60) # Total number of clusters
 fixed <- c("n2")
@@ -110,11 +111,11 @@ library(dplyr)   # Format tables
 library(purrr)    # Format tables
 
 # Creation folder for results
-folder_results <- "experiments"
+folder_results <- "IU2"
 if (!dir.exists(folder_results)) {
   dir.create(folder_results)
 }
-arg_fx <- c("FindN2_IU_", "TimeN2_IU", 610)
+arg_fx <- c("FindN2_IU_", "TimeN2_IU")
 
 ## Loop for every row-----------------------------------------------------------
 for (Row in 3) {
@@ -128,12 +129,22 @@ for (Row in 3) {
   )
 }
 
+results <- mclapply(1:nrow(design_matrix_n2), function(i) {
+  run_simulation(
+    Row = i,
+    name_results = arg_fx[1],
+    name_times = arg_fx[2],
+    design_matrix = design_matrix_n2,
+    results_folder = folder_results
+  )
+}, mc.cores = 179)
+
 ## Collect results------------------------------------------------------------
 collect_results(
   design_matrix = design_matrix_n2,
   results_folder = folder_results,
   finding = "N2",
-  name_results = "findN2_iu_"
+  name_results = "FindN2_IU_", file_name = "results_iu", test = "intersection-union"
 )
 index_missingBF <- which(is.na(final_results_findN2$median.BF1c))
 missing_BF <- final_results_findN2[which(is.na(final_results_findN2$median.BF1c)), ]
@@ -151,6 +162,8 @@ for (Row in 81) {
   )
 }
 
+
+
 ## Parallelise version with future-----------------------------------------------
 # Source
 source("functions_simulation.R")
@@ -163,7 +176,7 @@ if (!dir.exists(folder_results)) {
 }
 # Run simulation
 
-arg_fx <- c("FindN2_IU_", "TimeN2_IU_", 810) #Name of results, name of time, seed
+arg_fx <- c("FindN2_IU_", "TimeN2_IU_") #Name of results, name of time, seed
 
 simulation_parallelised(
   design_matrix = design_matrix_n2[1:5, ],
@@ -176,12 +189,12 @@ simulation_parallelised(
 
 ## Collect results in one matrix --------------------------------------------------
 results_iu <- collect_results(
-  design_matrix_n2,
+  design_matrix = design_matrix_n2,
+  results_folder = folder_results,
   finding = "N2",
-  results_folder = "IU",
-  name_results = "FindN2_IU_",
-  test = test,
-  file_name = "results_FindN2_IU"
+  name_results = "FindN2_IU_", 
+  file_name = "results_iu", 
+  test = "intersection-union"
 )
 
 times_iu <- collect_times(
@@ -301,6 +314,22 @@ if (!dir.exists(folder_results)) {
 }
 arg_fx <- c("FindN2_homog_", "TimeN2_homog_")
 
+# Change name
+# change <- list.files(folder_results, recursive = TRUE, full.names = TRUE)
+# change <- change[252:502]
+# change <- str_sort(change , numeric = TRUE)
+# index <- c(252:502)
+# change_df <- cbind(index, change)
+# change_df <- change_df[order(as.numeric(change_df[, 1]), decreasing = TRUE), ]
+# change_vector <- change_df[, 2]
+# for (file in change_vector) {
+#   file_name <- basename(file)
+#   file_name_alone <- gsub(".RDS$", "", file_name)
+#   number <- gsub("TimeN2_homoge_", "", file_name_alone)
+#   actual_number <- as.integer(number) + 36
+#   new_name <- paste0(folder_results, "/TimeN2_homoge_", actual_number, ".RDS")
+#   file.rename(file, new_name)
+# }
 ## Parallelise version with future-----------------------------------------------
 # Source
 source("functions_simulation.R")
@@ -315,16 +344,6 @@ results <- mclapply(1:nrow(design_matrix_n2), function(i) {
     results_folder = folder_results
   )
 }, mc.cores = 179)
-
-## Collect results homogeneity--------------------------------------------
-
-results_homog <- collect_results(design_matrix_n2, results_folder = "homogeneity2", finding = "N2",
-                name_results = "FindN2_homog_", test = "homogeneity",
-                file_name = "results_homog", rows = 1:nrow(design_matrix_n2))
-
-times_homog <- collect_times(design_matrix = design_matrix_n2, results_folder = "homogeneity2", 
-                            finding = "N2", name_results = "TimeN2_homog_", test = "homogeneity",
-                            file_name = "times_homog", rows = 1:nrow(design_matrix_n2))
 
 # Simulation for omnibus test-----------------------------------------------
 
@@ -450,27 +469,34 @@ results <- mclapply(1:nrow(design_matrix_n2), function(i) {
     design_matrix = design_matrix_n2,
     results_folder = folder_results
   )
-}, mc.cores = 179)
+}, mc.cores =179)
 
 
 #-----------------------------------------
+simulation_parallelised(
+  design_matrix = design_matrix_n2,
+  folder = folder_results,
+  nclusters = 160,
+  parall = "future",
+  required_fx = arg_fx
+) # Name of results file, Name time files, master.seed
+
 ## Collect results
 results_omni <- collect_results(
   design_matrix = design_matrix_n2,
-  results_folder = "omnibus2",
+  results_folder = "omnibus",
   finding = "N2",
   name_results = "FindN2_omni_",
   test = "omnibus",
-  file_name = "results_omni"
+  file_name = "results_FindN2_omni"
 )
-
 times_omni <- collect_times(
   design_matrix = design_matrix_n2,
-  results_folder = "omnibus2",
+  results_folder = "omnibus",
   finding = "N2",
   name_results = "TimeN2_omni_",
   test = "omnibus",
-  file_name = "times_omni"
+  file_name = "times_FindN2_omni"
 )
 
 
@@ -481,10 +507,10 @@ library(dplyr)
 results_FindN2_IU <- readRDS("IU/results_FindN2_IU.RDS")
 #ICCs
 results_iu <- results_FindN2_IU
-# rho_labs_intra <- c("rho[1]~0.2", "rho[1]~0.5")
-rho_labs_intra <- c("rho[1]*'= 0.2'", "rho[1]*'= 0.5'")
+rho_labs_intra <- c("rho[1]~0.2", "rho[1]~0.5")
+# rho_labs_intra <- c("rho[1]*': 0.2'", "rho[1]*': 0.5'")
 names(rho_labs_intra) <- c("0.2", "0.5")
-rho_labs_inter <- c("rho[2]*'= 0.005'", "rho[2]*'= 0.025'")
+rho_labs_inter <- c("rho[2]~0.005", "rho[2]~0.025")
 names(rho_labs_inter) <- c("0.005", "0.025")
 results_iu_plot <- results_iu[(results_iu$eff_size1 == 0.3) &
                                 (results_iu$eff_size2 == 0.5) &
@@ -515,7 +541,7 @@ plot_iccs
 # Save plot with proportions for slide
 ggsave(
   plot = plot_iccs,
-  filename = "plot_iccs_iu.eps",
+  filename = "plot_iccs.eps",
   width = 180,
   height = 130,
   units = "mm",
@@ -524,6 +550,15 @@ ggsave(
 )
 
 # Effect sizes
+eff_size1_lab <- c("d 1: 0.3", "d 1: 0.5", "d 1:0.7")
+eff_size1_lab <-  c("d[1]~': 0.3'", "d[1]~': 0.5'", "d[1]~': 0.7'")
+
+names(eff_size1_lab) <- c("0.3", "0.5", "0.7")
+eff_size2_lab <- c("d 2: 0.5", "d 2: 0.7", "d 2: 0.9")
+names(eff_size2_lab) <- c("0.5", "0.7", "0.9")
+
+
+
 results_iu_plot <- results_iu[(results_iu$intersubj_between_outICC == 0.025) &
                                 (results_iu$intrasubj_between_outICC == 0.5) &
                                 (results_iu$pmp_thresh == 0.95) , ]
@@ -534,12 +569,13 @@ results_iu_plot2 <- results_iu_plot %>%
     eff_pair = factor(eff_pair,
                       levels = c("0.3_0.5", "0.3_0.7", "0.3_0.9", 
                                  "0.5_0.7", "0.5_0.9", "0.7_0.9"),
-                      labels = c("d[1]~'= 0.3'~~~~~~~~~~ d[2]~'= 0.5'",
-                                 "d[1]~'= 0.3'~~~~~~~~~~ d[2]~'= 0.7'",
-                                 "d[1]~'= 0.3'~~~~~~~~~~ d[2]~'= 0.9'",
-                                 "d[1]~'= 0.5'~~~~~~~~~~ d[2]~'= 0.7'",
-                                 "d[1]~'= 0.5'~~~~~~~~~~ d[2]~'= 0.9'",
-                                 "d[1]~'= 0.7'~~~~~~~~~~ d[2]~'= 0.9'")))
+                      labels = c("atop(d[1]~': 0.3', d[2]~': 0.5')",
+                                 "atop(d[1]~': 0.3', d[2]~': 0.7')",
+                                 "atop(d[1]~': 0.3', d[2]~': 0.9')",
+                                 "atop(d[1]~': 0.5', d[2]~': 0.7')",
+                                 "atop(d[1]~': 0.5', d[2]~': 0.9')",
+                                 "atop(d[1]~': 0.7', d[2]~': 0.9')"))
+  )
 base2 <- ggplot(results_iu_plot2,
                 aes(
                   x = n1.final,
@@ -563,9 +599,9 @@ plot_effsiz
 # Save plot with proportions for slide
 ggsave(
   plot = plot_effsiz,
-  filename = "plot_effsiz_iu.eps",
+  filename = "plot_effsiz.eps",
   width = 180,
-  height = 130,
+  height = 115,
   units = "mm",
   device = "eps",
   dpi = 300
@@ -583,13 +619,13 @@ results_iu_plot2 <- results_iu_plot %>%
     eff_pair = factor(eff_pair,
                       levels = c("0.3_0.5", "0.3_0.7", "0.3_0.9", 
                                  "0.5_0.7", "0.5_0.9", "0.7_0.9"),
-                      labels = c("d[1]~'= 0.3'~~~~~~~~~~ d[2]~'= 0.5'",
-                                 "d[1]~'= 0.3'~~~~~~~~~~ d[2]~'= 0.7'",
-                                 "d[1]~'= 0.3'~~~~~~~~~~ d[2]~'= 0.9'",
-                                 "d[1]~'= 0.5'~~~~~~~~~~ d[2]~'= 0.7'",
-                                 "d[1]~'= 0.5'~~~~~~~~~~ d[2]~'= 0.9'",
-                                 "d[1]~'= 0.7'~~~~~~~~~~ d[2]~'= 0.9'")))
-
+                      labels = c("atop(d[1]~': 0.3', d[2]~': 0.5')",
+                                 "atop(d[1]~': 0.3', d[2]~': 0.7')",
+                                 "atop(d[1]~': 0.3', d[2]~': 0.9')",
+                                 "atop(d[1]~': 0.5', d[2]~': 0.7')",
+                                 "atop(d[1]~': 0.5', d[2]~': 0.9')",
+                                 "atop(d[1]~': 0.7', d[2]~': 0.9')"))
+  )
 base2 <- ggplot(results_iu_plot2,
                 aes(
                   x = n1.final,
@@ -613,9 +649,9 @@ plot_thres
 # Save plot with proportions for slide
 ggsave(
   plot = plot_thres,
-  filename = "plot_thres_iu.eps",
+  filename = "plot_thres.eps",
   width = 180,
-  height = 130,
+  height = 115,
   units = "mm",
   device = "eps",
   dpi = 300
@@ -623,10 +659,11 @@ ggsave(
 
 # OMNIBUS #
 #ICCs
-results_omni <-  readRDS("~/GitHub/SSD-Multivariate-CRT/scripts/omnibus2/results_omni.RDS")
-rho_labs_intra <- c("rho[1]*'= 0.2'", "rho[1]*'= 0.5'")
+results_FindN2_omni <- readRDS("omnibus/results_FindN2_omni.RDS")
+results_omni <- results_FindN2_omni
+rho_labs_intra <- c("rho[1]~0.2", "rho[1]~0.5")
 names(rho_labs_intra) <- c("0.2", "0.5")
-rho_labs_inter <- c("rho[2]*'= 0.005'", "rho[2]*'= 0.025'")
+rho_labs_inter <- c("rho[2]~0.005", "rho[2]~0.025")
 names(rho_labs_inter) <- c("0.005", "0.025")
 results_omni_plot <- results_omni[(results_omni$eff_size1 == 0.3) &
                                     (results_omni$eff_size2 == 0.5) &
@@ -667,12 +704,35 @@ ggsave(
 )
 
 # Effect sizes
+eff_size1_lab <- c("d 1: 0.2", "d 1: 0.3", "d 1: 0.5", "d 1: 0.7")
+names(eff_size1_lab) <- c("0.2", "0.3", "0.5", "0.7")
+eff_size2_lab <- c("d 2: 0.3", "d 2: 0.5", "d 2: 0.7", "d 2: 0.9")
+names(eff_size2_lab) <- c("0.3", "0.5", "0.7", "0.9")
+
 results_omni_plot <- results_omni[(results_omni$intersubj_between_outICC == 0.025) &
                                     (results_omni$intrasubj_between_outICC == 0.5) &
                                     (results_omni$pmp_thresh == 0.95), ]
+base <- ggplot(results_omni_plot,
+               aes(
+                 x = n1.final,
+                 y = n2.final,
+                 color = as.factor(out_specific_ICC),
+                 shape = as.factor(out_specific_ICC)
+               )) +
+  geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
+  scale_fill_brewer("Set2") + labs(color = "ρ_0", shape = "ρ_0") +
+  xlab("Cluster size") + ylab("Number of clusters") +
+  theme(legend.position = "bottom", text = element_text(size = 8)) + ylim(0, (250 + 5))
+
+plot_effsiz_omni <- base + facet_grid(
+  rows = vars(eff_size1),
+  cols = vars(eff_size2),
+  labeller = labeller(eff_size1 = eff_size1_lab, eff_size2 = eff_size2_lab)
+)
+plot_effsiz_omni
 
 results_omni_plot2 <- results_omni_plot %>%
-  mutate(eff_pair = factor(paste0("d[1]~'= ", eff_size1, "'~~~~~~~~~~ d[2]~'= ", eff_size2, "'")))
+  mutate(eff_pair = factor(paste0("d 1: ", eff_size1, "\nd 2: ", eff_size2)))
 
 base2 <- ggplot(
   results_omni_plot2,
@@ -686,13 +746,13 @@ base2 <- ggplot(
   geom_point() +
   geom_line() + scale_x_continuous(breaks = c(5, 15, 30)) +
   scale_color_brewer(palette = "Set2") +
-  labs(colour = bquote(rho[0]), shape = bquote(rho[0])) +
+  labs(colour = "ρ_0", shape = "ρ_0") +
   xlab("Cluster size") + ylab("Number of clusters") +
   theme(legend.position = "bottom", text =  element_text(size = 12)) +
   ylim(0, 200)
 
 plot_effsiz_omni <- base2 +
-  facet_wrap( ~ eff_pair, ncol = 3, labeller = label_parsed)
+  facet_wrap( ~ eff_pair, ncol = 3)
 
 plot_effsiz_omni
 
@@ -715,7 +775,7 @@ results_omni_plot <- results_omni[(results_omni$intersubj_between_outICC == 0.02
 
 
 results_omni_plot2 <- results_omni_plot %>%
-  mutate(eff_pair = factor(paste0("d[1]~'= ", eff_size1, "'~~~~~~~~~~ d[2]~'= ", eff_size2, "'")))
+  mutate(eff_pair = factor(paste0("d 1: ", eff_size1, "\nd 2: ", eff_size2)))
 
 base2 <- ggplot(
   results_omni_plot2,
@@ -735,7 +795,7 @@ base2 <- ggplot(
   ylim(0, 200)
 
 plot_thres_omni <- base2 +
-  facet_wrap( ~ eff_pair, ncol = 3, labeller = label_parsed)
+  facet_wrap( ~ eff_pair, ncol = 3)
 
 plot_thres_omni
 
@@ -751,17 +811,36 @@ ggsave(
 )
 
 #HOMOGENEITY
+collect_results(
+  design_matrix = design_matrix_n2,
+  results_folder = "homogeneity",
+  finding = "N2",
+  name_results = "FindN2_homoge_",
+  test = "homogeneity",
+  file_name = "results_FindN2_homoge"
+)
+collect_times(
+  design_matrix = design_matrix_n2,
+  results_folder = "homogeneity",
+  finding = "N2",
+  name_results = "TimeN2_homoge_",
+  test = "homogeneity",
+  file_name = "times_findN2_homoge"
+)
+
 ## Data
 results_FindN2_homoge <- readRDS("homogeneity/results_FindN2_homoge.RDS")
 results_homoge <- results_FindN2_homoge
 ## ICCs
-rho_labs_intra <- c("rho[1]*'= 0.2'", "rho[1]*'= 0.5'")
+rho_labs_intra <- c("Intrasubject \nbetween-outcome: 0.2",
+                    "Intrasubject \nbetween-outcome: 0.5")
 names(rho_labs_intra) <- c("0.2", "0.5")
-rho_labs_inter <- c("rho[2]*'= 0.005'", "rho[2]*'= 0.025'")
+rho_labs_inter <- c("Intersubject \nbetween-outcome: 0.005",
+                    "Intersubject \nbetween-outcome: 0.025")
 names(rho_labs_inter) <- c("0.005", "0.025")
-results_homoge_plot <- results_homog[(results_homog$eff_size1 == 0.3) &
-                                        (results_homog$pmp_thresh == 0.95) &
-                                        (results_homog$delta == 0.3), ]
+results_homoge_plot <- results_homoge[(results_homoge$eff_size1 == 0.3) &
+                                        (results_homoge$pmp_thresh == 0.95) &
+                                        (results_homoge$delta == 0.3), ]
 base <- ggplot(
   results_homoge_plot,
   aes(
@@ -772,7 +851,7 @@ base <- ggplot(
   )
 ) +
   geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
-  scale_fill_brewer("Set2") + labs(color = bquote(rho[0]), shape = bquote(rho[0])) +
+  scale_fill_brewer("Set2") + labs(color = "Outcome-specific", shape = "Outcome-specific") +
   xlab("Cluster size") + ylab("Number of clusters") +
   theme(legend.position = "bottom", text =  element_text(size = 12)) + ylim(0, (280)) +
   scale_x_continuous(breaks = c(5, 15, 30))
@@ -782,8 +861,7 @@ plot_iccs_homoge <- base + facet_grid(
   cols = vars(intrasubj_between_outICC),
   labeller = labeller(
     intersubj_between_outICC = rho_labs_inter,
-    intrasubj_between_outICC = rho_labs_intra,
-    .default = label_parsed
+    intrasubj_between_outICC = rho_labs_intra
   )
 )
 plot_iccs_homoge
@@ -800,15 +878,55 @@ ggsave(
 )
 
 # Effect sizes
-results_homoge_plot <- results_homog[(results_homog$intersubj_between_outICC == 0.025) &
-                                        (results_homog$intrasubj_between_outICC == 0.5) &
-                                        (results_homog$pmp_thresh == 0.95), ]
+eff_size1_lab <- c("d 1: 0.3", "d 1: 0.6", "d 1: 0.9")
+names(eff_size1_lab) <- c("0.3", "0.6", "0.9")
+eff_size2_lab <- c("d 2: 0.2", "d 2: 0.5", "d 2: 0.8")
+names(eff_size2_lab) <- c("0.2", "0.5", "0.8")
+delta_label <- c(paste("\u0394 = 0.2"), paste("\u0394 = 0.3"))
+names(delta_label) <- c("0.2", "0.3")
+# results_homoge_plot <- results_homoge[(results_homoge$intersubj_between_outICC == 0.025) &
+#                                           (results_homoge$intrasubj_between_outICC == 0.5) &
+#                                           (results_homoge$pmp_thresh == 0.95) &
+#                                           (results_homoge$delta == 0.3), ]
+results_homoge_plot <- results_homoge[(results_homoge$intersubj_between_outICC == 0.025) &
+                                        (results_homoge$intrasubj_between_outICC == 0.5) &
+                                        (results_homoge$pmp_thresh == 0.95), ]
+base <- ggplot(
+  results_homoge_plot,
+  aes(
+    x = n1.final,
+    y = n2.final,
+    color = as.factor(out_specific_ICC),
+    shape = as.factor(out_specific_ICC)
+  )
+) +
+  geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
+  scale_fill_brewer("Set2") + labs(color = "Outcome-specific", shape = "Outcome-specific") +
+  xlab("Cluster size") + ylab("Number of clusters") +
+  theme(legend.position = "bottom") + ylim(0, 200)
+
+plot_effsiz_homoge <- base + facet_grid(
+  rows = vars(eff_size1),
+  cols = vars(eff_size2),
+  labeller = labeller(eff_size1 = eff_size1_lab, eff_size2 = eff_size2_lab)
+)
+
+base + facet_grid(
+  rows = vars(eff_size1),
+  cols = vars(eff_size2),
+  labeller = labeller(eff_size1 = eff_size1_lab, eff_size2 = eff_size2_lab)
+)
+plot_effsiz_homoge
 
 results_homoge_plot2 <- results_homoge_plot %>%
-  mutate(delta = factor(delta, levels = sort(unique(delta)), 
-                        labels = paste0("Delta~'='~", sort(unique(delta)))),
-         eff_pair = factor(paste0("d[1]~'= ", eff_size1, "'~~~~~~~~~~ d[2]~'= ", eff_size2, "'")))
-
+  mutate(eff_pair = factor(
+    paste0(
+      "Treatment effect 1: ",
+      eff_size1,
+      "\nTreatment effect 2: ",
+      eff_size2
+    )
+  ))
 
 base2 <- ggplot(
   results_homoge_plot2,
@@ -822,14 +940,16 @@ base2 <- ggplot(
   geom_point() +
   geom_line() + scale_x_continuous(breaks = c(5, 15, 30)) +
   scale_color_brewer(palette = "Set2") +
-  labs(colour = bquote(rho[0]), shape = bquote(rho[0])) +
+  labs(colour = "Outcome-specific ICC", shape = "Outcome-specific ICC") +
   xlab("Cluster size") + ylab("Number of clusters") +
   theme(legend.position = "bottom", text =  element_text(size = 12)) +
   ylim(0, 500)
 
+# plot_effsiz <- base2 +
+#     facet_grid( ~eff_pair)
+
 plot_effsiz <- base2 +
-  facet_grid(delta ~ eff_pair, labeller = label_parsed)
-plot_effsiz
+  facet_grid(delta ~ eff_pair, labeller = labeller(delta = delta_label))
 
 # Save plot with proportions for slide
 ggsave(
@@ -843,17 +963,46 @@ ggsave(
 )
 
 # Thresholds
-results_homoge_plot <- results_homog[(results_homog$intersubj_between_outICC ==
+# results_homoge_plot <- results_homoge[(results_homoge$intersubj_between_outICC ==
+#                                            0.025) &
+#                                           (results_homoge$intrasubj_between_outICC ==
+#                                                0.5) & (results_homoge$out_specific_ICC == 0.05)
+#                                       &
+#                                           (results_homoge$delta == 0.3), ]
+results_homoge_plot <- results_homoge[(results_homoge$intersubj_between_outICC ==
                                          0.025) &
-                                        (results_homog$intrasubj_between_outICC ==
+                                        (results_homoge$intrasubj_between_outICC ==
                                            0.5) &
-                                        (results_homog$out_specific_ICC == 0.05), ]
+                                        (results_homoge$out_specific_ICC == 0.05), ]
+base <- ggplot(
+  results_homoge_plot,
+  aes(
+    x = n1.final,
+    y = n2.final,
+    color = as.factor(pmp_thresh),
+    shape = as.factor(pmp_thresh)
+  )
+) +
+  geom_point() + geom_line() + scale_color_brewer(palette = "Set2") +
+  scale_fill_brewer("Set2") + labs(color = "PMP threshold", shape = "PMP threshold") +
+  xlab("Cluster size") + ylab("Number of clusters") +
+  theme(legend.position = "bottom") + ylim(0, (200 + 5))
 
+plot_thres_homoge <- base + facet_grid(
+  rows = vars(eff_size2),
+  cols = vars(eff_size1),
+  labeller = labeller(eff_size1 = eff_size1_lab, eff_size2 = eff_size2_lab)
+)
 
 results_homoge_plot2 <- results_homoge_plot %>%
-  mutate(delta = factor(delta, levels = sort(unique(delta)), 
-                        labels = paste0("Delta~'='~", sort(unique(delta)))),
-         eff_pair = factor(paste0("d[1]~'= ", eff_size1, "'~~~~~~~~~~ d[2]~'= ", eff_size2, "'")))
+  mutate(eff_pair = factor(
+    paste0(
+      "Treatment effect 1: ",
+      eff_size1,
+      "\nTreatment effect 2: ",
+      eff_size2
+    )
+  ))
 
 base2 <- ggplot(
   results_homoge_plot2,
@@ -873,7 +1022,7 @@ base2 <- ggplot(
   ylim(0, 500)
 
 plot_thres_homoge <- base2 +
-  facet_grid(delta ~ eff_pair, labeller = label_parsed)
+  facet_grid(delta ~ eff_pair, labeller = labeller(delta = delta_label))
 
 plot_thres_homoge
 
@@ -1268,3 +1417,24 @@ missing_rows <- function(folder_path,
   difference <- setdiff(check_numbers, row_numbers)
   print(difference)
 }
+
+# Collect data for plots ============
+ndatasets <- 500
+design_matrixN2 <- read_parquet("design_matrix_omni")
+data_plot_omni <- collect_results_pl(design_matrix = design_matrixN2, 
+                                     results_folder = "omnibus2",
+                                     finding = "N2", name_results = "FindN2_omni_",
+                                     test = "omnibus", file_name = "data_omni_pl",
+                                     save = TRUE, ndatasets = ndatasets)
+design_matrixN2 <- read_parquet("design_matrix_iu")
+data_plot_iu <- collect_results_pl(design_matrix = design_matrixN2, 
+                                   results_folder = "IU2",
+                                   finding = "N2", name_results = "FindN2_IU_",
+                                   test = "intersection-union", file_name = "data_iu_pl",
+                                   save = TRUE, ndatasets = ndatasets)
+design_matrixN2 <- read_parquet("design_matrix_homog")
+data_plot_homog <- collect_results_pl(design_matrix = design_matrixN2, 
+                                   results_folder = "homogeneity2",
+                                   finding = "N2", name_results = "FindN2_homog_",
+                                   test = "homogeneity", file_name = "data_homog_pl",
+                                   save = TRUE, ndatasets = ndatasets)
